@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OutSystems Deployment Notifier</title>
+  <style>
+    body { width: 300px; padding: 10px; font-family: Arial, sans-serif; }
+    .history { margin-bottom: 20px; }
+    .history-item { margin-bottom: 10px; padding: 5px; border: 1px solid #ccc; }
+    .prefs { }
+    .prefs label { display: block; }
+  </style>
+</head>
+<body>
+  <h3>Recent Deployments</h3>
+  <div id="history" class="history"></div>
+  <h3>Notification Preferences</h3>
+  <div class="prefs">
+    <label><input type="checkbox" id="notifySuccess"> Success</label>
+    <label><input type="checkbox" id="notifyWarning"> Warning</label>
+    <label><input type="checkbox" id="notifyError"> Error</label>
+    <label><input type="checkbox" id="notifyIntervention"> Intervention</label>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

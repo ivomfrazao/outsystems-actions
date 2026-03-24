@@ -64,7 +64,7 @@ function clearBadge() {
 
 function playSound(status) {
 	if (userPreferences[`notify${status.charAt(0).toUpperCase() + status.slice(1)}`]) {
-		const audio = new Audio(chrome.runtime.getURL('notification.mp3'));
+		const audio = new Audio(chrome.runtime.getURL('sounds/notification.wav'));
 		audio.play();
 	}
 }

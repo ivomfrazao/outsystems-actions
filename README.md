@@ -1,6 +1,6 @@
-# OutSystems Deployment Notifier
+# OutSystems Actions
 
-A Chromium extension that monitors OutSystems Service Center and LifeTime for deployment statuses and notifies users upon completion or when intervention is required.
+A Chromium extension that monitors OutSystems Service Center and LifeTime and notifies users upon relevant events such as deployments, publishes, and required interventions.
 
 ## Features
 

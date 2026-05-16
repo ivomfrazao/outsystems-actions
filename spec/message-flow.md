@@ -1,29 +1,33 @@
-# OutSystems Deployment Notifier — Message Flow Specification
-**Version:** 1.1  
+# OutSystems Actions — Message Flow Specification
+
+**Version:** 1.2
 **Purpose:** Define communication patterns between content scripts, background worker, and popup UI.
 
 ---
 
-# 1. Overview
+## 1. Overview
 
 The extension uses message passing to coordinate:
-- Deployment detection  
-- Notification and history management  
-- User interactions  
 
-All messages follow the formats in `data-model.md`.
+- Deployment detection
+- Notification and history management
+- User interactions
+
+All message payload schemas are defined in `data-model.md`.
 
 ---
 
-# 2. Content Script → Background Worker
+## 2. Content Script → Background Worker
 
-## 2.1 deploymentUpdate
+### 2.1 deploymentUpdate
+
+Sent whenever the detected deployment status changes.
 
 ```json
 {
   "type": "deploymentUpdate",
   "payload": {
-    "status": "string",                   // "in_progress", "success", "warning", "error", "intervention"
+    "status": "string",
     "name": "string | null",
     "environment": "string | null",
     "deploymentType": "string",
@@ -33,29 +37,36 @@ All messages follow the formats in `data-model.md`.
 }
 ```
 
-Background responsibilities:
-- Track `in_progress`  
-- Detect transitions to final states  
-- Trigger notifications, sounds, badges  
-- Store final states in history  
+`status` values: `"in_progress"`, `"success"`, `"warning"`, `"error"`, `"intervention"`.
+
+Background responsibilities on receipt:
+
+- Track `in_progress` per tab (persisted to `chrome.storage.session`)
+- Detect transitions to final states
+- Trigger notifications, sounds, and badge updates on transition
+- Store final states in history
 
 ---
 
-# 3. Background Worker → Content Script
+## 3. Background Worker → Content Script
 
-## 3.1 focusTab
+### 3.1 playSound
+
+Sent when a deployment reaches a final state and the user preference allows notification for that status. The content script plays `sounds/notification.wav` on receipt.
+
+Sound playback is delegated to the content script because MV3 service workers do not have access to the Web Audio API.
 
 ```json
 {
-  "type": "focusTab"
+  "type": "playSound"
 }
 ```
 
 ---
 
-# 4. Popup UI → Background Worker
+## 4. Popup UI → Background Worker
 
-## 4.1 getHistory
+### 4.1 getHistory
 
 Request:
 
@@ -74,7 +85,7 @@ Response:
 
 ---
 
-## 4.2 getPreferences
+### 4.2 getPreferences
 
 Request:
 
@@ -98,7 +109,7 @@ Response:
 
 ---
 
-## 4.3 updatePreferences
+### 4.3 updatePreferences
 
 Request:
 
@@ -117,26 +128,30 @@ Response:
 
 ---
 
-# 5. Background Worker → Popup UI
+### 4.4 clearBadge
 
-## 5.1 badgeCleared
+Sent by the popup when it opens. No response is returned.
 
 ```json
-{ "type": "badgeCleared" }
+{ "type": "clearBadge" }
 ```
 
 ---
 
-# 6. Notification Click Flow
+## 5. Notification Click Flow
 
-1. User clicks notification  
-2. Background focuses tab  
-3. Background optionally sends `focusTab`  
+1. User clicks a browser notification.
+2. Background extracts the deployment ID from the notification ID string.
+3. Background looks up the matching URL from deployment history.
+4. Background focuses the originating tab via `chrome.tabs.update`.
+5. Background clears the notification via `chrome.notifications.clear`.
+6. Badge is cleared.
 
 ---
 
-# 7. Error Handling
+## 6. Error Handling
 
-- Malformed messages ignored  
-- No user-facing errors  
-- No notifications from malformed messages  
+- Unrecognised message types are ignored silently.
+- No user-facing errors are exposed.
+- The content script suppresses `chrome.runtime.lastError` when the service worker is temporarily unavailable between polling cycles.
+- The background suppresses `chrome.runtime.lastError` when sending `playSound` if the content script tab is no longer available.

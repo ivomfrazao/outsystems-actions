@@ -1,29 +1,11 @@
-# OutSystems Deployment Notifier — Data Model Specification
-**Version:** 1.1  
+# OutSystems Actions — Data Model Specification
+
+**Version:** 1.2
 **Purpose:** Define the data structures used across the extension.
 
 ---
 
-# 1. Deployment Event Object
-
-```json
-{
-  "id": "string",
-  "type": "string",                   // "eSpace", "Solution", "LifeTimeDeployment"
-  "name": "string | null",
-  "environment": "string | null",
-  "status": "string",                 // "in_progress", "success", "warning", "error", "intervention"
-  "timestamp": "number",
-  "url": "string",
-  "tabId": "number"
-}
-```
-
----
-
-# 2. Deployment History Entry
-
-Only final states are stored.
+## 1. Deployment Event Object
 
 ```json
 {
@@ -31,15 +13,44 @@ Only final states are stored.
   "type": "string",
   "name": "string | null",
   "environment": "string | null",
-  "status": "string",                 // "success", "warning", "error", "intervention"
+  "status": "string",
+  "timestamp": "number",
+  "url": "string",
+  "tabId": "number"
+}
+```
+
+- `id`: composite key `"<timestamp>-<tabId>"`
+- `type`: `"eSpace"`, `"Solution"`, or `"LifeTimeDeployment"`
+- `status`: `"in_progress"`, `"success"`, `"warning"`, `"error"`, `"intervention"`
+
+---
+
+## 2. Deployment History Entry
+
+Only final states are stored. Maximum 5 entries; oldest removed on overflow.
+
+Persisted in `chrome.storage.local`.
+
+```json
+{
+  "id": "string",
+  "type": "string",
+  "name": "string | null",
+  "environment": "string | null",
+  "status": "string",
   "timestamp": "number",
   "url": "string"
 }
 ```
 
+- `status`: `"success"`, `"warning"`, `"error"`, `"intervention"`
+
 ---
 
-# 3. User Preferences
+## 3. User Preferences
+
+Persisted in `chrome.storage.local`.
 
 ```json
 {
@@ -63,24 +74,24 @@ Default:
 
 ---
 
-# 4. Internal State (Background Worker)
+## 4. Active Deployments (Background Worker State)
+
+Keyed by tab ID. Persisted in `chrome.storage.session` so state survives service worker restarts within the same browser session. Cleared on browser close.
 
 ```json
 {
-  "activeDeployments": {
-    "<tabId>": {
-      "currentStatus": "string | null",
-      "lastUpdate": "number"
-    }
+  "<tabId>": {
+    "currentStatus": "string | null",
+    "lastUpdate": "number"
   }
 }
 ```
 
 ---
 
-# 5. Message Payloads
+## 5. Message Payloads
 
-## 5.1 deploymentUpdate
+### 5.1 deploymentUpdate (Content Script → Background)
 
 ```json
 {
@@ -96,32 +107,25 @@ Default:
 }
 ```
 
-## 5.2 focusTab
+### 5.2 playSound (Background → Content Script)
+
+No payload. The background applies user preference filtering before sending; the content script plays the sound unconditionally on receipt.
 
 ```json
 {
-  "type": "focusTab"
+  "type": "playSound"
 }
 ```
 
 ---
 
-# 6. Badge State
+## 6. Badge State
 
-```json
-{
-  "text": "string | null",
-  "color": "string | null"
-}
-```
+| Status       | Text | Colour  |
+|--------------|------|---------|
+| success      | ✓    | #00FF00 |
+| warning      | !    | #FFFF00 |
+| error        | !    | #FF0000 |
+| intervention | !    | #FF0000 |
 
----
-
-# 7. Sound Event
-
-```json
-{
-  "type": "sound",
-  "status": "string"
-}
-```
+Badge text is cleared (empty string) when the popup is opened or a notification is clicked.

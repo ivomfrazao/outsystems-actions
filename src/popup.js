@@ -1,4 +1,4 @@
-// Popup script for OutSystems Deployment Notifier
+// Popup script for OutSystems Actions
 
 document.addEventListener('DOMContentLoaded', () => {
 	// Clear badge on popup open

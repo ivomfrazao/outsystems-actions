@@ -1,6 +1,14 @@
-// Background service worker for OutSystems Deployment Notifier
+// Background service worker for OutSystems Actions
 
 let activeDeployments = {}; // {tabId: {currentStatus, lastUpdate}}
+
+// Restore activeDeployments across service worker restarts
+chrome.storage.session.get(['activeDeployments'], (result) => {
+	if (result.activeDeployments) {
+		activeDeployments = result.activeDeployments;
+	}
+});
+
 let userPreferences = {
 	notifySuccess: true,
 	notifyWarning: true,
@@ -29,6 +37,10 @@ function saveHistory() {
 
 function savePreferences() {
 	chrome.storage.local.set({ preferences: userPreferences });
+}
+
+function persistActiveDeployments() {
+	chrome.storage.session.set({ activeDeployments: activeDeployments });
 }
 
 function addToHistory(deployment) {
@@ -62,10 +74,11 @@ function clearBadge() {
 	chrome.action.setBadgeText({ text: '' });
 }
 
-function playSound(status) {
+function playSound(status, tabId) {
 	if (userPreferences[`notify${status.charAt(0).toUpperCase() + status.slice(1)}`]) {
-		const audio = new Audio(chrome.runtime.getURL('sounds/notification.wav'));
-		audio.play();
+		chrome.tabs.sendMessage(tabId, { type: 'playSound' }, () => {
+			void chrome.runtime.lastError;
+		});
 	}
 }
 
@@ -75,7 +88,7 @@ function createNotification(deployment) {
 	}
 	const options = {
 		type: 'basic',
-		iconUrl: 'icons/icon48.png',
+		iconUrl: 'icons/icon-48.png',
 		title: `Deployment ${deployment.status}`,
 		message: `${deployment.name || 'Unknown'} in ${deployment.environment || 'Unknown'} at ${new Date(deployment.timestamp).toLocaleTimeString()}`,
 		requireInteraction: false
@@ -97,11 +110,12 @@ function handleDeploymentUpdate(message, sender) {
 			currentStatus: payload.status,
 			lastUpdate: payload.timestamp
 		};
+		persistActiveDeployments();
 
 		if (payload.status !== 'in_progress' && current && current.currentStatus === 'in_progress') {
 			// Transition to final state
 			updateBadge(payload.status);
-			playSound(payload.status);
+			playSound(payload.status, tabId);
 			createNotification(payload);
 			addToHistory({
 				id: payload.id,
@@ -136,7 +150,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Notification click
 chrome.notifications.onClicked.addListener((notificationId) => {
 	if (notificationId.startsWith('deployment-')) {
-		const id = notificationId.split('-')[1];
+		const id = notificationId.replace(/^deployment-/, '');
 		// Find tabId from history or active
 		const entry = deploymentHistory.find(h => h.id === id);
 		if (entry) {

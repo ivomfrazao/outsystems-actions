@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "OutSystems Deployment Notifier",
+  "name": "OutSystems Actions",
   "version": "1.1",
-  "description": "Monitors OutSystems Service Center and LifeTime for deployment statuses and notifies on completion or intervention.",
+  "description": "Monitors OutSystems Service Center and LifeTime and notifies on relevant events such as deployments, publishes, and required interventions.",
   "permissions": [
     "notifications",
     "storage",
@@ -39,5 +39,14 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["sounds/notification.wav"],
+      "matches": [
+        "*://*/ServiceCenter/*",
+        "*://*/LifeTime/*"
+      ]
+    }
+  ]
 }

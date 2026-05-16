@@ -1,4 +1,4 @@
-// Content script for OutSystems Deployment Notifier
+// Content script for OutSystems Actions
 // Detects deployment statuses on Service Center and LifeTime pages
 
 let currentStatus = null;
@@ -60,6 +60,8 @@ function checkForUpdates() {
 				url: window.location.href,
 				tabId: null // Will be set by background
 			}
+		}, () => {
+			void chrome.runtime.lastError;
 		});
 	}
 }
@@ -70,3 +72,10 @@ extractMetadata();
 
 // Poll every 2 seconds
 setInterval(checkForUpdates, 2000);
+
+chrome.runtime.onMessage.addListener((message) => {
+	if (message.type === 'playSound') {
+		const audio = new Audio(chrome.runtime.getURL('sounds/notification.wav'));
+		audio.play().catch(() => {});
+	}
+});

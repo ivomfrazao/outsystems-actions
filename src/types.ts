@@ -51,6 +51,10 @@ export interface UserPreferences {
 export interface ActiveDeploymentState {
   currentStatus: DeploymentStatus | null;
   lastUpdate: number;
+  name: string | null;
+  environment: string | null;
+  url: string;
+  deploymentType: DeploymentType;
 }
 
 export type ActiveDeployments = Record<number, ActiveDeploymentState>;
@@ -69,10 +73,11 @@ export interface DeploymentUpdateMessage {
   };
 }
 
-export interface PlaySoundMessage      { type: 'playSound'; }
-export interface GetHistoryMessage     { type: 'getHistory'; }
-export interface GetPreferencesMessage { type: 'getPreferences'; }
-export interface ClearBadgeMessage     { type: 'clearBadge'; }
+export interface PlaySoundMessage             { type: 'playSound'; }
+export interface GetHistoryMessage            { type: 'getHistory'; }
+export interface GetActiveDeploymentsMessage  { type: 'getActiveDeployments'; }
+export interface GetPreferencesMessage        { type: 'getPreferences'; }
+export interface ClearBadgeMessage            { type: 'clearBadge'; }
 
 export interface UpdatePreferencesMessage {
   type: 'updatePreferences';
@@ -82,6 +87,11 @@ export interface UpdatePreferencesMessage {
 export interface HistoryResponseMessage {
   type: 'historyResponse';
   payload: { history: DeploymentHistoryEntry[] };
+}
+
+export interface ActiveDeploymentsResponseMessage {
+  type: 'activeDeploymentsResponse';
+  payload: { active: ActiveDeploymentState[] };
 }
 
 export interface PreferencesResponseMessage {
@@ -94,6 +104,7 @@ export interface PreferencesUpdatedMessage { type: 'preferencesUpdated'; }
 export type BackgroundInboundMessage =
   | DeploymentUpdateMessage
   | GetHistoryMessage
+  | GetActiveDeploymentsMessage
   | GetPreferencesMessage
   | UpdatePreferencesMessage
   | ClearBadgeMessage;
@@ -102,5 +113,6 @@ export type ContentInboundMessage = PlaySoundMessage;
 
 export type PopupResponseMessage =
   | HistoryResponseMessage
+  | ActiveDeploymentsResponseMessage
   | PreferencesResponseMessage
   | PreferencesUpdatedMessage;

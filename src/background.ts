@@ -1,5 +1,6 @@
 import type {
   ActiveDeployments,
+  ActiveDeploymentState,
   BackgroundInboundMessage,
   DeploymentHistoryEntry,
   DeploymentUpdateMessage,
@@ -142,10 +143,15 @@ function handleDeploymentUpdate(
 
   const current = activeDeployments[tabId];
   if (!current || current.currentStatus !== payload.status) {
-    activeDeployments[tabId] = {
+    const next: ActiveDeploymentState = {
       currentStatus: payload.status,
       lastUpdate: timestamp,
+      name: payload.name,
+      environment: payload.environment,
+      url: payload.url,
+      deploymentType: payload.deploymentType,
     };
+    activeDeployments[tabId] = next;
     persistActiveDeployments();
 
     if (
@@ -177,7 +183,7 @@ chrome.runtime.onMessage.addListener((
   message: BackgroundInboundMessage,
   sender: chrome.runtime.MessageSender,
   sendResponse: (response: PopupResponseMessage) => void
-): void => {
+): boolean | void => {
   switch (message.type) {
     case 'deploymentUpdate':
       handleDeploymentUpdate(message, sender);
@@ -185,6 +191,18 @@ chrome.runtime.onMessage.addListener((
     case 'getHistory':
       sendResponse({ type: 'historyResponse', payload: { history: deploymentHistory } });
       break;
+    case 'getActiveDeployments':
+      // Read from session storage directly: the in-memory activeDeployments may be
+      // empty if the service worker was terminated and just restarted (async restore
+      // not yet complete). Session storage survives service worker restarts.
+      chrome.storage.session.get(
+        [STORAGE_KEYS.activeDeployments],
+        (result: { activeDeployments?: ActiveDeployments }) => {
+          const stored = result.activeDeployments ?? activeDeployments;
+          sendResponse({ type: 'activeDeploymentsResponse', payload: { active: Object.values(stored) } });
+        }
+      );
+      return true; // keep channel open until async sendResponse fires
     case 'getPreferences':
       sendResponse({ type: 'preferencesResponse', payload: userPreferences });
       break;

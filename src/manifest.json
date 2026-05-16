@@ -48,8 +48,7 @@
         "sounds/notification.wav"
       ],
       "matches": [
-        "*://*/ServiceCenter/*",
-        "*://*/LifeTime/*"
+        "<all_urls>"
       ]
     }
   ]

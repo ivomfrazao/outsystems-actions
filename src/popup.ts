@@ -1,44 +1,98 @@
 import type {
+  ActiveDeploymentState,
   DeploymentHistoryEntry,
   PopupResponseMessage,
   UserPreferences,
 } from './types';
+import { DeploymentStatus } from './types';
+
+type TagStyle = 'in-progress' | 'success' | 'warning' | 'error' | 'intervention';
+
+const TAG_LABELS: Record<string, { label: string; style: TagStyle }> = {
+  [DeploymentStatus.InProgress]:   { label: 'In Progress',   style: 'in-progress'  },
+  [DeploymentStatus.Success]:      { label: 'Success',       style: 'success'      },
+  [DeploymentStatus.Warning]:      { label: 'Warning',       style: 'warning'      },
+  [DeploymentStatus.Error]:        { label: 'Error',         style: 'error'        },
+  [DeploymentStatus.Intervention]: { label: 'Intervention',  style: 'intervention' },
+};
+
+function tag(status: string): string {
+  const t = TAG_LABELS[status];
+  if (!t) return '';
+  return `<span class="tag tag-${t.style}">${t.label}</span>`;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   chrome.runtime.sendMessage({ type: 'clearBadge' });
 
-  chrome.runtime.sendMessage({ type: 'getHistory' }, (response: PopupResponseMessage) => {
-    if (response.type === 'historyResponse') {
-      displayHistory(response.payload.history);
+  let active: ActiveDeploymentState[] = [];
+  let history: DeploymentHistoryEntry[] = [];
+  let loaded = 0;
+
+  function tryRender(): void {
+    if (++loaded === 2) renderDeployments(active, history);
+  }
+
+  chrome.runtime.sendMessage({ type: 'getActiveDeployments' }, (response: PopupResponseMessage) => {
+    if (response?.type === 'activeDeploymentsResponse') {
+      active = response.payload.active;
     }
+    tryRender();
+  });
+
+  chrome.runtime.sendMessage({ type: 'getHistory' }, (response: PopupResponseMessage) => {
+    if (response?.type === 'historyResponse') {
+      history = response.payload.history;
+    }
+    tryRender();
   });
 
   chrome.runtime.sendMessage({ type: 'getPreferences' }, (response: PopupResponseMessage) => {
-    if (response.type === 'preferencesResponse') {
+    if (response?.type === 'preferencesResponse') {
       setPreferences(response.payload);
     }
   });
 });
 
-function displayHistory(history: DeploymentHistoryEntry[]): void {
-  const historyDiv = document.getElementById('history');
-  if (!historyDiv) return;
+function renderDeployments(active: ActiveDeploymentState[], history: DeploymentHistoryEntry[]): void {
+  const container = document.getElementById('deployments');
+  if (!container) return;
 
-  historyDiv.innerHTML = '';
-  if (history.length === 0) {
-    historyDiv.innerHTML = '<p>No recent deployments.</p>';
+  const inProgress = active
+    .filter(d => d.currentStatus === DeploymentStatus.InProgress)
+    .sort((a, b) => b.lastUpdate - a.lastUpdate);
+
+  if (inProgress.length === 0 && history.length === 0) {
+    container.innerHTML = '<p class="empty">No recent deployments.</p>';
     return;
   }
 
+  container.innerHTML = '';
+
+  inProgress.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'deployment-item';
+    div.innerHTML = `
+      <strong>${item.name ?? 'Unknown'}</strong>${tag(DeploymentStatus.InProgress)}
+      <div class="deployment-meta">
+        ${item.environment ?? 'Unknown'} &middot; started ${new Date(item.lastUpdate).toLocaleTimeString()}
+      </div>
+      <div class="deployment-link"><a href="${item.url}" target="_blank">View</a></div>
+    `;
+    container.appendChild(div);
+  });
+
   history.forEach(item => {
     const div = document.createElement('div');
-    div.className = 'history-item';
+    div.className = 'deployment-item';
     div.innerHTML = `
-      <strong>${item.name ?? 'Unknown'}</strong> (${item.environment ?? 'Unknown'})<br>
-      ${item.status} at ${new Date(item.timestamp).toLocaleString()}<br>
-      <a href="${item.url}" target="_blank">View</a>
+      <strong>${item.name ?? 'Unknown'}</strong>${tag(item.status)}
+      <div class="deployment-meta">
+        ${item.environment ?? 'Unknown'} &middot; ${new Date(item.timestamp).toLocaleTimeString()}
+      </div>
+      <div class="deployment-link"><a href="${item.url}" target="_blank">View</a></div>
     `;
-    historyDiv.appendChild(div);
+    container.appendChild(div);
   });
 }
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OutSystems Actions",
-  "version": "1.1",
+  "version": "1.1.0",
   "description": "Monitors OutSystems Service Center and LifeTime and notifies on relevant events such as deployments, publishes, and required interventions.",
   "permissions": [
     "notifications",
@@ -19,7 +19,9 @@
         "*://*/ServiceCenter/*",
         "*://*/LifeTime/*"
       ],
-      "js": ["content.js"]
+      "js": [
+        "content.js"
+      ]
     }
   ],
   "background": {
@@ -42,7 +44,9 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["sounds/notification.wav"],
+      "resources": [
+        "sounds/notification.wav"
+      ],
       "matches": [
         "*://*/ServiceCenter/*",
         "*://*/LifeTime/*"

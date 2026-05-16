@@ -1,0 +1,65 @@
+name: Publish Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Package extension
+        run: cd dist && zip -r ../extension.zip .
+
+      # ── Chrome Web Store ──────────────────────────────────────────────────
+      - name: Publish to Chrome Web Store
+        uses: fregante/chrome-webstore-upload-action@v2
+        with:
+          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          file-path: extension.zip
+
+      # ── Edge Add-ons ──────────────────────────────────────────────────────
+      # Uses the Microsoft Edge Add-ons Submission API directly.
+      # Docs: https://learn.microsoft.com/en-us/microsoft-edge/extensions-chromium/publish/api/addons-api-reference
+      - name: Get Edge access token
+        id: edge_token
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            "https://login.microsoftonline.com/${{ secrets.EDGE_TENANT_ID }}/oauth2/v2.0/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=${{ secrets.EDGE_CLIENT_ID }}" \
+            -d "client_secret=${{ secrets.EDGE_CLIENT_SECRET }}" \
+            -d "scope=https://api.addons.microsoftedge.microsoft.com/.default" \
+            -d "grant_type=client_credentials")
+          echo "token=$(echo "$RESPONSE" | jq -r '.access_token')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package to Edge draft
+        run: |
+          curl -s -X POST \
+            "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package" \
+            -H "Authorization: Bearer ${{ steps.edge_token.outputs.token }}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @extension.zip
+
+      - name: Publish Edge draft
+        run: |
+          curl -s -X POST \
+            "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions" \
+            -H "Authorization: Bearer ${{ steps.edge_token.outputs.token }}"

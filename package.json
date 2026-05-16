@@ -4,12 +4,13 @@
   "private": true,
   "description": "Chrome extension that monitors OutSystems deployments",
   "scripts": {
-    "clean":       "rm -rf dist",
-    "typecheck":   "tsc --noEmit",
-    "compile":     "node build.mjs",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "compile": "node build.mjs",
     "copy-assets": "cp src/manifest.json src/popup.html dist/ && cp -r src/icons src/sounds dist/",
-    "build":       "npm run clean && npm run typecheck && npm run compile && npm run copy-assets",
-    "watch":       "node build.mjs --watch"
+    "build": "npm run clean && npm run typecheck && npm run compile && npm run copy-assets",
+    "watch": "node build.mjs --watch",
+    "bump": "node scripts/bump-version.mjs"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",

@@ -10,6 +10,7 @@ import type {
 } from './types';
 import {
   DeploymentStatus,
+  DeploymentType,
   HISTORY_MAX,
   STORAGE_KEYS,
 } from './types';
@@ -70,6 +71,18 @@ chrome.storage.local.get(
   }
 );
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function sameDeploymentUrl(a: string, b: string): boolean {
+  try {
+    const ua = new URL(a);
+    const ub = new URL(b);
+    return ua.pathname === ub.pathname && ua.search === ub.search;
+  } catch {
+    return a === b;
+  }
+}
+
 // ── Persistence helpers ───────────────────────────────────────────────────────
 
 function saveHistory(): void {
@@ -114,14 +127,21 @@ function playSound(status: FinalStatus, tabId: number): void {
   }
 }
 
+const ACTION_LABEL: Record<string, string> = {
+  [DeploymentType.eSpace]:             'Publish',
+  [DeploymentType.Solution]:           'Publish',
+  [DeploymentType.LifeTimeDeployment]: 'Deployment',
+};
+
 function createNotification(entry: DeploymentHistoryEntry): void {
   if (!userPreferences[PREF_KEY_MAP[entry.status]]) {
     return;
   }
+  const action = ACTION_LABEL[entry.type] ?? 'Deployment';
   const options: chrome.notifications.NotificationOptions<true> = {
     type: 'basic',
     iconUrl: 'icons/icon-48.png',
-    title: `Deployment ${entry.status}`,
+    title: `${action} ${entry.status}`,
     message: `${entry.name ?? 'Unknown'} in ${entry.environment ?? 'Unknown'} at ${new Date(entry.timestamp).toLocaleTimeString()}`,
     requireInteraction: false,
   };
@@ -141,13 +161,36 @@ function handleDeploymentUpdate(
   const timestamp = Date.now();
   const id = `${timestamp}-${tabId}`;
 
+  // Remove stale entries for the same deployment URL from other tabs (e.g. the
+  // user opened the page in a new tab via the View button or a manual refresh).
+  // Preserve the original lastUpdate so the card start time doesn't reset.
+  let inheritedUpdate: number | undefined;
+  for (const existingId of Object.keys(activeDeployments).map(Number)) {
+    if (existingId !== tabId && sameDeploymentUrl(activeDeployments[existingId].url, payload.url)) {
+      const stale = activeDeployments[existingId];
+      if (stale.currentStatus === payload.status) {
+        inheritedUpdate = stale.lastUpdate;
+      }
+      delete activeDeployments[existingId];
+    }
+  }
+
   const current = activeDeployments[tabId];
+
+  // Name can arrive null on the first message (before the progress table renders)
+  // and become available on a later keepalive. Patch it in without a full state change.
+  if (current && current.currentStatus === payload.status && current.name === null && payload.name !== null) {
+    activeDeployments[tabId] = { ...current, name: payload.name };
+    persistActiveDeployments();
+  }
+
   if (!current || current.currentStatus !== payload.status) {
     const next: ActiveDeploymentState = {
       currentStatus: payload.status,
-      lastUpdate: timestamp,
+      lastUpdate: inheritedUpdate ?? timestamp,
       name: payload.name,
       environment: payload.environment,
+      server: payload.server,
       url: payload.url,
       deploymentType: payload.deploymentType,
     };
@@ -165,6 +208,7 @@ function handleDeploymentUpdate(
         type: payload.deploymentType,
         name: payload.name,
         environment: payload.environment,
+        server: payload.server,
         status: finalStatus,
         timestamp,
         url: payload.url,

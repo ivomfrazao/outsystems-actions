@@ -36,6 +36,7 @@ export interface DeploymentHistoryEntry {
   type: DeploymentType;
   name: string | null;
   environment: string | null;
+  server: string | null;
   status: FinalStatus;
   timestamp: number;
   url: string;
@@ -53,6 +54,7 @@ export interface ActiveDeploymentState {
   lastUpdate: number;
   name: string | null;
   environment: string | null;
+  server: string | null;
   url: string;
   deploymentType: DeploymentType;
 }
@@ -67,6 +69,7 @@ export interface DeploymentUpdateMessage {
     status: DeploymentStatus;
     name: string | null;
     environment: string | null;
+    server: string | null;
     deploymentType: DeploymentType;
     url: string;
     tabId: null;

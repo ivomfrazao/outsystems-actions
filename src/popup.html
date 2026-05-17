@@ -1,40 +1,409 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>OutSystems Actions</title>
   <style>
-    body { width: 300px; padding: 10px; font-family: Arial, sans-serif; }
-    .deployment-item { margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-    .deployment-meta { font-size: 0.85em; color: #555; margin-top: 2px; }
-    .deployment-link { font-size: 0.85em; }
-    .tag {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 3px;
-      font-size: 0.75em;
-      font-weight: bold;
-      vertical-align: middle;
-      margin-left: 4px;
+    /* ── CSS custom properties (light mode defaults) ── */
+    :root {
+      --c-header-bg:        #1a1a2e;
+      --c-accent:           #e8002d;
+      --c-body-bg:          #f4f5f7;
+      --c-card-bg:          #ffffff;
+      --c-card-border:      #e2e5ea;
+      --c-section-head-bg:  #eef0f4;
+      --c-section-head-bdr: #dde0e6;
+      --c-text-primary:     #1a1a2e;
+      --c-text-secondary:   #4b5563;
+      --c-text-muted:       #9ca3af;
+      --c-nav-bg:           #ffffff;
+      --c-nav-border:       #e2e5ea;
+      --c-nav-active:       #e8002d;
+      --c-nav-inactive:     #6b7280;
+      --c-badge-bg:         #1a1a2e;
+      --c-badge-text:       #ffffff;
+      --c-btn-bg:           #f0f1f4;
+      --c-btn-border:       #d1d5db;
+      --c-btn-hover:        #e2e5ea;
+      --c-toggle-off:       #d1d5db;
+      --c-toggle-on:        #1a1a2e;
     }
-    .tag-in-progress  { background: #fff3cd; color: #856404; }
-    .tag-success      { background: #d4edda; color: #155724; }
-    .tag-warning      { background: #fff3cd; color: #856404; }
-    .tag-error        { background: #f8d7da; color: #721c24; }
-    .tag-intervention { background: #f8d7da; color: #721c24; }
-    .prefs label { display: block; margin-top: 4px; }
-    .empty { color: #888; font-size: 0.9em; }
+
+    /* ── Dark mode overrides ── */
+    .popup--dark {
+      --c-body-bg:          #0f0f1a;
+      --c-card-bg:          #1a1a2e;
+      --c-card-border:      #2d2d45;
+      --c-section-head-bg:  #12122a;
+      --c-section-head-bdr: #2d2d45;
+      --c-text-primary:     #f1f1f6;
+      --c-text-secondary:   #9ca3af;
+      --c-text-muted:       #6b7280;
+      --c-nav-bg:           #1a1a2e;
+      --c-nav-border:       #2d2d45;
+      --c-nav-inactive:     #9ca3af;
+      --c-badge-bg:         #e8002d;
+      --c-badge-text:       #ffffff;
+      --c-btn-bg:           #252540;
+      --c-btn-border:       #3d3d60;
+      --c-btn-hover:        #2d2d50;
+      --c-toggle-off:       #3d3d60;
+      --c-toggle-on:        #e8002d;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Popup shell ── */
+    .popup {
+      width: 360px;
+      height: 480px;
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      background: var(--c-body-bg);
+      color: var(--c-text-primary);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--c-header-bg);
+      color: #ffffff;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .header__accent {
+      width: 4px;
+      height: 18px;
+      background: var(--c-accent);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .header__title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Panels (scrollable content area) ── */
+    .panels {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .panel {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel--hidden { display: none; }
+
+    /* ── Section block ── */
+    .section {
+      background: var(--c-card-bg);
+      border: 1px solid var(--c-card-border);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .section__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 11px;
+      background: var(--c-section-head-bg);
+      border-bottom: 1px solid var(--c-section-head-bdr);
+    }
+    .section__title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--c-text-secondary);
+    }
+    .section__badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--c-badge-bg);
+      color: var(--c-badge-text);
+      border-radius: 10px;
+      padding: 1px 7px;
+      min-width: 20px;
+      text-align: center;
+      line-height: 16px;
+      transition: background 0.2s;
+    }
+
+    /* ── Deployment card ── */
+    .card {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--c-card-border);
+    }
+    .card:last-child { border-bottom: none; }
+
+    .card__accent {
+      width: 3px;
+      flex-shrink: 0;
+    }
+    .card__accent--in-progress  { background: #f59e0b; }
+    .card__accent--success      { background: #22c55e; }
+    .card__accent--warning      { background: #f59e0b; }
+    .card__accent--error        { background: #ef4444; }
+    .card__accent--intervention { background: #a855f7; }
+
+    .card__body {
+      flex: 1;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+    .card__top {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .card__name {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--c-text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+    .card__tag {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .card__tag--in-progress  { background: #fef3c7; color: #92400e; }
+    .card__tag--success      { background: #dcfce7; color: #166534; }
+    .card__tag--warning      { background: #fef3c7; color: #92400e; }
+    .card__tag--error        { background: #fee2e2; color: #991b1b; }
+    .card__tag--intervention { background: #f3e8ff; color: #6b21a8; }
+
+    .card__meta {
+      font-size: 11px;
+      color: var(--c-text-secondary);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* View button lives in .card__top for natural vertical alignment with the tag */
+    .btn-view {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--c-text-primary);
+      background: var(--c-btn-bg);
+      border: 1px solid var(--c-btn-border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      line-height: 18px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.1s;
+    }
+    .btn-view:hover { background: var(--c-btn-hover); }
+
+    /* ── Empty state ── */
+    .empty {
+      padding: 18px 12px;
+      color: var(--c-text-muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* ── Settings: preference rows ── */
+    .pref {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--c-card-border);
+    }
+    .pref:last-child { border-bottom: none; }
+    .pref__label {
+      font-size: 12px;
+      color: var(--c-text-primary);
+    }
+
+    /* ── CSS-only toggle switch ── */
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 32px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .toggle__track {
+      position: absolute;
+      inset: 0;
+      background: var(--c-toggle-off);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .toggle__track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border-radius: 50%;
+      transition: transform 0.15s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+    .toggle input:checked + .toggle__track { background: var(--c-toggle-on); }
+    .toggle input:checked + .toggle__track::after { transform: translateX(14px); }
+    .toggle input:focus-visible + .toggle__track {
+      outline: 2px solid #3b82f6;
+      outline-offset: 1px;
+    }
+
+    /* ── Bottom navigation bar ── */
+    .nav {
+      display: flex;
+      background: var(--c-nav-bg);
+      border-top: 1px solid var(--c-nav-border);
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .nav__item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 4px 6px;
+      color: var(--c-nav-inactive);
+      gap: 2px;
+      border-top: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .nav__item--active {
+      color: var(--c-nav-active);
+      border-top-color: var(--c-nav-active);
+    }
+    .nav__item:hover:not(.nav__item--active) { color: var(--c-text-primary); }
+    .nav__icon  { font-size: 14px; line-height: 1; }
+    .nav__label { font-size: 10px; font-weight: 600; letter-spacing: 0.03em; }
   </style>
 </head>
-<body>
-  <h3>Deployments</h3>
-  <div id="deployments"></div>
-  <h3>Notification Preferences</h3>
-  <div class="prefs">
-    <label><input type="checkbox" id="notifySuccess"> Success</label>
-    <label><input type="checkbox" id="notifyWarning"> Warning</label>
-    <label><input type="checkbox" id="notifyError"> Error</label>
-    <label><input type="checkbox" id="notifyIntervention"> Intervention</label>
-  </div>
+<body class="popup">
+
+  <header class="header">
+    <div class="header__accent"></div>
+    <span class="header__title">OutSystems Actions</span>
+  </header>
+
+  <main class="panels">
+
+    <!-- Deployments panel: active items first, then history -->
+    <section class="panel" data-panel="deployments">
+      <div class="section">
+        <div class="section__header">
+          <span class="section__title">Deployments</span>
+          <span class="section__badge" data-badge="deployments">0</span>
+        </div>
+        <div class="section__body" data-list="deployments">
+          <p class="empty" data-empty="deployments">No recent deployments.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings panel -->
+    <section class="panel panel--hidden" data-panel="settings">
+
+      <div class="section">
+        <div class="section__header">
+          <span class="section__title">Appearance</span>
+        </div>
+        <div class="section__body">
+          <div class="pref">
+            <span class="pref__label">Dark Mode</span>
+            <label class="toggle">
+              <input type="checkbox" id="darkModeToggle">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section__header">
+          <span class="section__title">&#128276; Notifications</span>
+        </div>
+        <div class="section__body">
+          <div class="pref">
+            <span class="pref__label">Success</span>
+            <label class="toggle">
+              <input type="checkbox" id="notifySuccess">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+          <div class="pref">
+            <span class="pref__label">Warning</span>
+            <label class="toggle">
+              <input type="checkbox" id="notifyWarning">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+          <div class="pref">
+            <span class="pref__label">Error</span>
+            <label class="toggle">
+              <input type="checkbox" id="notifyError">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+          <div class="pref">
+            <span class="pref__label">Intervention</span>
+            <label class="toggle">
+              <input type="checkbox" id="notifyIntervention">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <nav class="nav">
+    <button class="nav__item nav__item--active" data-tab="deployments">
+      <span class="nav__icon">&#9889;</span>
+      <span class="nav__label">Deployments</span>
+    </button>
+    <button class="nav__item" data-tab="settings">
+      <span class="nav__icon">&#9881;</span>
+      <span class="nav__label">Settings</span>
+    </button>
+  </nav>
+
   <script src="popup.js"></script>
 </body>
 </html>

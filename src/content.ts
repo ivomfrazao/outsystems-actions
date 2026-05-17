@@ -29,6 +29,7 @@ let currentStatus: DeploymentStatus | null = null;
 let deploymentType: DeploymentType | null = null;
 let deploymentName: string | null = null;
 let environment: string | null = null;
+let serverName: string | null = null;
 
 // ── Detection ─────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,20 @@ function extractMetadata(): void {
     deploymentName = null;
     environment = null;
   }
+
+  // For Application publishes the title doesn't include the app name; extract it
+  // from the progress table. Use textContent (not innerText) so collapsed/hidden
+  // rows are included — the sub-step row is display:none when the step is collapsed.
+  if (!deploymentName) {
+    const tableText = document.getElementById('MessagesTable')?.textContent ?? '';
+    const match = tableText.match(/Creating Application '([^']+)'/);
+    deploymentName = match?.[1] ?? null;
+  }
+
+  // Server name from the sidebar's server info block — more stable than hostname.
+  // Targets: .sc-content-left .margin-top-base > div:first-child
+  serverName = document.querySelector('.sc-content-left .margin-top-base > div:first-child')
+    ?.textContent?.trim() ?? null;
 }
 
 function detectStatus(): DeploymentStatus | null {
@@ -99,6 +114,7 @@ function sendUpdate(status: DeploymentStatus): void {
         status,
         name: deploymentName,
         environment,
+        server: serverName,
         deploymentType,
         url: window.location.href,
         tabId: null,

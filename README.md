@@ -8,7 +8,10 @@ A Chromium extension that monitors OutSystems Service Center and LifeTime and no
 - Browser notifications for final states (success, warning, error, intervention)
 - Sound alerts
 - Badge indicator on extension icon
-- History of last 5 deployments
+- Deployment history with configurable limits (max count and max age in days)
+- Click any card to open the deployment — reuses an existing tab when possible
+- Delete individual history entries from the popup
+- Card enter/leave animations (can be disabled in Settings)
 - User-configurable notification preferences
 
 ## Installation

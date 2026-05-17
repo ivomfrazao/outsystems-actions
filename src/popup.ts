@@ -18,23 +18,34 @@ const TAG_LABELS: Record<string, { label: string; style: TagStyle }> = {
 
 // ── Theme ────────────────────────────────────────────────────────────────────
 
-function applyTheme(isDark: boolean): void {
+type DarkModePreference = 'on' | 'off' | 'system';
+
+function applyTheme(mode: DarkModePreference): void {
+  const isDark = mode === 'on' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   document.body.classList.toggle('popup--dark', isDark);
-  const checkbox = document.getElementById('darkModeToggle') as HTMLInputElement | null;
-  if (checkbox) checkbox.checked = isDark;
+  document.querySelectorAll<HTMLElement>('#darkModeSeg .seg__btn').forEach(btn => {
+    btn.classList.toggle('seg__btn--active', btn.dataset['value'] === mode);
+  });
 }
 
 function initTheme(): void {
   chrome.storage.local.get('darkMode', (result) => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = 'darkMode' in result ? (result['darkMode'] as boolean) : prefersDark;
-    applyTheme(isDark);
+    const stored = result['darkMode'];
+    // Migrate from the old boolean format (true → 'on', false → 'off').
+    let mode: DarkModePreference;
+    if (stored === true)                                    mode = 'on';
+    else if (stored === false)                              mode = 'off';
+    else if (stored === 'on' || stored === 'off' || stored === 'system') mode = stored;
+    else                                                    mode = 'system';
+    applyTheme(mode);
   });
 
-  document.getElementById('darkModeToggle')?.addEventListener('change', (e) => {
-    const isDark = (e.target as HTMLInputElement).checked;
-    applyTheme(isDark);
-    chrome.storage.local.set({ darkMode: isDark });
+  document.querySelectorAll<HTMLButtonElement>('#darkModeSeg .seg__btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset['value'] as DarkModePreference;
+      applyTheme(mode);
+      chrome.storage.local.set({ darkMode: mode });
+    });
   });
 }
 
@@ -55,20 +66,37 @@ function initNav(): void {
   });
 }
 
+// ── Animations ───────────────────────────────────────────────────────────────
+
+// Toggling .popup--animated on <body> gates all CSS card animations. When the
+// class is absent, @keyframes rules under .popup--animated never fire.
+let animationsEnabled = true;
+
+function applyAnimations(enabled: boolean): void {
+  animationsEnabled = enabled;
+  document.body.classList.toggle('popup--animated', enabled);
+}
+
 // ── Deployments rendering ────────────────────────────────────────────────────
 
+// Tracks which card IDs are currently in the DOM so we can diff on each render.
+const renderedCardIds = new Set<string>();
+
 function buildCard(
+  id: string,
   name: string | null,
   status: string,
   environment: string | null,
   server: string | null,
   timestamp: number,
   url: string,
+  isHistory: boolean,
 ): HTMLElement {
   const t = TAG_LABELS[status];
 
   const card = document.createElement('div');
   card.className = 'card';
+  card.dataset['cardId'] = id;
 
   const accent = document.createElement('div');
   accent.className = `card__accent${t ? ` card__accent--${t.style}` : ''}`;
@@ -76,7 +104,7 @@ function buildCard(
   const body = document.createElement('div');
   body.className = 'card__body';
 
-  // Top row: name | tag | view — all in the same flex line for natural alignment
+  // Top row: name | tag | delete (history only)
   const top = document.createElement('div');
   top.className = 'card__top';
 
@@ -92,13 +120,31 @@ function buildCard(
     top.appendChild(tagEl);
   }
 
-  const link = document.createElement('a');
-  link.className = 'btn-view';
-  link.href = url;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  link.textContent = 'View';
-  top.appendChild(link);
+  // History cards get a delete button that stops propagation so it doesn't
+  // also trigger the card's open action.
+  if (isHistory) {
+    const del = document.createElement('button');
+    del.className = 'btn-delete';
+    del.title = 'Delete from history';
+    del.textContent = '×';
+    del.addEventListener('click', (e) => {
+      e.stopPropagation();
+      chrome.runtime.sendMessage({ type: 'deleteHistoryEntry', payload: { id } });
+      // Optimistically remove the card from the DOM immediately.
+      if (animationsEnabled) {
+        card.classList.remove('card--entering');
+        card.classList.add('card--leaving');
+        card.addEventListener('animationend', () => {
+          card.remove();
+          renderedCardIds.delete(id);
+        }, { once: true });
+      } else {
+        card.remove();
+        renderedCardIds.delete(id);
+      }
+    });
+    top.appendChild(del);
+  }
 
   // Meta row: server · environment · time (omit nulls)
   const metaParts = [server, environment].filter((p): p is string => p != null && p !== '');
@@ -114,6 +160,12 @@ function buildCard(
   card.appendChild(accent);
   card.appendChild(body);
 
+  // Clicking anywhere on the card opens the deployment, reusing the existing
+  // browser tab when possible (handled by the background service worker).
+  card.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'openDeployment', payload: { url } });
+  });
+
   return card;
 }
 
@@ -123,9 +175,6 @@ function renderDeployments(active: ActiveDeploymentState[], history: DeploymentH
   const empty = document.querySelector<HTMLElement>('[data-empty="deployments"]');
   if (!list) return;
 
-  // Remove existing cards but keep the empty-state element in place.
-  list.querySelectorAll('.card').forEach(el => el.remove());
-
   const inProgress = active
     .filter(d => d.currentStatus === DeploymentStatus.InProgress)
     .sort((a, b) => b.lastUpdate - a.lastUpdate);
@@ -134,39 +183,120 @@ function renderDeployments(active: ActiveDeploymentState[], history: DeploymentH
   if (badge) badge.textContent = String(total);
   if (empty) empty.style.display = total > 0 ? 'none' : '';
 
-  inProgress.forEach(item =>
-    list.appendChild(buildCard(item.name, DeploymentStatus.InProgress, item.environment, item.server, item.lastUpdate, item.url)),
-  );
-  history.forEach(item =>
-    list.appendChild(buildCard(item.name, item.status, item.environment, item.server, item.timestamp, item.url)),
-  );
-}
+  // Concluded entries are sorted descending by timestamp regardless of storage order.
+  const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
 
-// ── Preferences ──────────────────────────────────────────────────────────────
+  // Build desired state as ordered list of { id, buildFn }
+  const desired: Array<{ id: string; build: () => HTMLElement }> = [
+    ...inProgress.map(item => ({
+      id: item.url,
+      build: () => buildCard(item.url, item.name, DeploymentStatus.InProgress, item.environment, item.server, item.lastUpdate, item.url, false),
+    })),
+    ...sortedHistory.map(item => ({
+      id: item.id,
+      build: () => buildCard(item.id, item.name, item.status, item.environment, item.server, item.timestamp, item.url, true),
+    })),
+  ];
 
-const PREF_IDS = ['notifySuccess', 'notifyWarning', 'notifyError', 'notifyIntervention'] as const;
+  const desiredIds = new Set(desired.map(d => d.id));
 
-function getCheckbox(id: keyof UserPreferences): HTMLInputElement | null {
-  return document.getElementById(id) as HTMLInputElement | null;
-}
+  // Remove cards that are no longer in the desired set.
+  for (const cardId of [...renderedCardIds]) {
+    if (!desiredIds.has(cardId)) {
+      const el = list.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(cardId)}"]`);
+      if (el) {
+        renderedCardIds.delete(cardId);
+        if (animationsEnabled) {
+          el.classList.add('card--leaving');
+          el.addEventListener('animationend', () => el.remove(), { once: true });
+        } else {
+          el.remove();
+        }
+      }
+    }
+  }
 
-function setPreferences(prefs: UserPreferences): void {
-  for (const id of PREF_IDS) {
-    const el = getCheckbox(id);
-    if (el) {
-      el.checked = prefs[id];
-      el.addEventListener('change', updatePreferences);
+  // Add cards that are new to the desired set (appended in order at the end;
+  // existing cards remain in their current DOM positions).
+  for (const { id, build } of desired) {
+    if (!renderedCardIds.has(id)) {
+      const el = build();
+      if (animationsEnabled) el.classList.add('card--entering');
+      list.appendChild(el);
+      renderedCardIds.add(id);
     }
   }
 }
 
+// ── Preferences ──────────────────────────────────────────────────────────────
+
+const BOOL_PREF_IDS = ['notifySuccess', 'notifyWarning', 'notifyError', 'notifyIntervention', 'animationsEnabled'] as const;
+
+function getCheckbox(id: string): HTMLInputElement | null {
+  return document.getElementById(id) as HTMLInputElement | null;
+}
+
+function getNumberInput(id: string): HTMLInputElement | null {
+  return document.getElementById(id) as HTMLInputElement | null;
+}
+
+function updateHistoryInputStates(type: 'count' | 'days'): void {
+  const countInput = getNumberInput('historyMaxCount');
+  const daysInput  = getNumberInput('historyMaxDays');
+  if (countInput) countInput.disabled = type !== 'count';
+  if (daysInput)  daysInput.disabled  = type !== 'days';
+}
+
+function setPreferences(prefs: UserPreferences): void {
+  for (const id of BOOL_PREF_IDS) {
+    const el = getCheckbox(id);
+    if (el) {
+      el.checked = prefs[id] as boolean;
+      el.addEventListener('change', updatePreferences);
+    }
+  }
+
+  applyAnimations(prefs.animationsEnabled);
+
+  // History limit type: select the correct radio and wire up change events.
+  const limitType = prefs.historyLimitType;
+  const limitRadio = document.querySelector<HTMLInputElement>(`input[name="historyLimitType"][value="${limitType}"]`);
+  if (limitRadio) limitRadio.checked = true;
+  updateHistoryInputStates(limitType);
+
+  document.querySelectorAll<HTMLInputElement>('input[name="historyLimitType"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      updateHistoryInputStates(radio.value as 'count' | 'days');
+      updatePreferences();
+    });
+  });
+
+  const countEl = getNumberInput('historyMaxCount');
+  if (countEl) {
+    countEl.value = String(prefs.historyMaxCount);
+    countEl.addEventListener('change', updatePreferences);
+  }
+
+  const daysEl = getNumberInput('historyMaxDays');
+  if (daysEl) {
+    daysEl.value = String(prefs.historyMaxDays);
+    daysEl.addEventListener('change', updatePreferences);
+  }
+}
+
 function updatePreferences(): void {
+  const limitType = (document.querySelector<HTMLInputElement>('input[name="historyLimitType"]:checked')?.value ?? 'count') as 'count' | 'days';
   const prefs: UserPreferences = {
     notifySuccess:      getCheckbox('notifySuccess')?.checked      ?? true,
     notifyWarning:      getCheckbox('notifyWarning')?.checked      ?? true,
     notifyError:        getCheckbox('notifyError')?.checked        ?? true,
     notifyIntervention: getCheckbox('notifyIntervention')?.checked ?? true,
+    animationsEnabled:  getCheckbox('animationsEnabled')?.checked  ?? true,
+    historyLimitType:   limitType,
+    historyMaxCount:    parseInt(getNumberInput('historyMaxCount')?.value ?? '5', 10) || 5,
+    historyMaxDays:     parseInt(getNumberInput('historyMaxDays')?.value  ?? '1', 10) || 1,
   };
+  applyAnimations(prefs.animationsEnabled);
   chrome.runtime.sendMessage({ type: 'updatePreferences', payload: prefs });
 }
 

@@ -11,7 +11,6 @@ import type {
 import {
   DeploymentStatus,
   DeploymentType,
-  HISTORY_MAX,
   STORAGE_KEYS,
 } from './types';
 
@@ -49,6 +48,10 @@ let userPreferences: UserPreferences = {
   notifyWarning:      true,
   notifyError:        true,
   notifyIntervention: true,
+  animationsEnabled:  true,
+  historyLimitType:   'count',
+  historyMaxCount:    5,
+  historyMaxDays:     1,
 };
 
 chrome.storage.local.get(
@@ -97,12 +100,21 @@ function persistActiveDeployments(): void {
   chrome.storage.session.set({ [STORAGE_KEYS.activeDeployments]: activeDeployments });
 }
 
-function addToHistory(entry: DeploymentHistoryEntry): void {
-  deploymentHistory.unshift(entry);
-  if (deploymentHistory.length > HISTORY_MAX) {
-    deploymentHistory = deploymentHistory.slice(0, HISTORY_MAX);
+// Called both when a new entry is added and when preferences change, so limits
+// are applied immediately whenever they tighten.
+function enforceHistoryLimits(): void {
+  if (userPreferences.historyLimitType === 'days') {
+    const cutoff = Date.now() - userPreferences.historyMaxDays * 86_400_000;
+    deploymentHistory = deploymentHistory.filter(e => e.timestamp >= cutoff);
+  } else {
+    deploymentHistory = deploymentHistory.slice(0, userPreferences.historyMaxCount);
   }
   saveHistory();
+}
+
+function addToHistory(entry: DeploymentHistoryEntry): void {
+  deploymentHistory.unshift(entry);
+  enforceHistoryLimits();
 }
 
 // ── Badge ─────────────────────────────────────────────────────────────────────
@@ -253,11 +265,36 @@ chrome.runtime.onMessage.addListener((
     case 'updatePreferences':
       userPreferences = message.payload;
       savePreferences();
+      enforceHistoryLimits();
       sendResponse({ type: 'preferencesUpdated' });
       break;
     case 'clearBadge':
       clearBadge();
       break;
+    // chrome.tabs.query({}) (without a url pattern) is required here because
+    // match patterns don't support query strings, so we filter manually with
+    // sameDeploymentUrl instead.
+    case 'openDeployment': {
+      const { url } = message.payload;
+      chrome.tabs.query({}, (tabs) => {
+        const tab = tabs.find(t => t.url !== undefined && sameDeploymentUrl(t.url, url));
+        if (tab?.id !== undefined) {
+          chrome.tabs.update(tab.id, { active: true });
+          if (tab.windowId !== undefined) {
+            chrome.windows.update(tab.windowId, { focused: true });
+          }
+        } else {
+          chrome.tabs.create({ url });
+        }
+      });
+      break;
+    }
+    case 'deleteHistoryEntry': {
+      const { id } = message.payload;
+      deploymentHistory = deploymentHistory.filter(e => e.id !== id);
+      saveHistory();
+      break;
+    }
   }
 });
 

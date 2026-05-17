@@ -1,6 +1,6 @@
 # OutSystems Actions — Message Flow Specification
 
-**Version:** 1.2
+**Version:** 1.4
 **Purpose:** Define communication patterns between content scripts, background worker, and popup UI.
 
 ---
@@ -99,10 +99,14 @@ Response:
 {
   "type": "preferencesResponse",
   "payload": {
-    "notifySuccess": true,
-    "notifyWarning": true,
-    "notifyError": true,
-    "notifyIntervention": true
+    "notifySuccess":      true,
+    "notifyWarning":      true,
+    "notifyError":        true,
+    "notifyIntervention": true,
+    "animationsEnabled":  true,
+    "historyLimitType":   "count",
+    "historyMaxCount":    5,
+    "historyMaxDays":     1
   }
 }
 ```
@@ -138,12 +142,50 @@ Sent by the popup when it opens. No response is returned.
 
 ---
 
+### 4.5 openDeployment
+
+Sent when the user clicks a deployment card. No response is returned.
+
+```json
+{
+  "type": "openDeployment",
+  "payload": { "url": "string" }
+}
+```
+
+Background responsibilities on receipt:
+
+1. Query all open tabs via `chrome.tabs.query({})` (url-pattern form is not used because match patterns do not support query strings).
+2. Find a tab whose URL matches `url` using path + query string comparison (`sameDeploymentUrl` helper).
+3. If found: focus the tab via `chrome.tabs.update` and bring its window to the foreground via `chrome.windows.update`.
+4. If not found: open a new tab via `chrome.tabs.create`.
+
+---
+
+### 4.6 deleteHistoryEntry
+
+Sent when the user clicks the delete button on a history card. No response is returned.
+
+```json
+{
+  "type": "deleteHistoryEntry",
+  "payload": { "id": "string" }
+}
+```
+
+Background responsibilities on receipt:
+
+1. Remove the entry with the matching `id` from `deploymentHistory`.
+2. Persist the updated history to `chrome.storage.local`.
+
+---
+
 ## 5. Notification Click Flow
 
 1. User clicks a browser notification.
 2. Background extracts the deployment ID from the notification ID string.
 3. Background looks up the matching URL from deployment history.
-4. Background focuses the originating tab via `chrome.tabs.update`.
+4. Background focuses the originating tab via `chrome.tabs.update` and its window via `chrome.windows.update`.
 5. Background clears the notification via `chrome.notifications.clear`.
 6. Badge is cleared.
 

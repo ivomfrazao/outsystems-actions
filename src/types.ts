@@ -20,7 +20,6 @@ export type FinalStatus = Exclude<DeploymentStatus, typeof DeploymentStatus.InPr
 
 // ── Domain constants ──────────────────────────────────────────────────────────
 
-export const HISTORY_MAX      = 5;
 export const POLL_INTERVAL_MS = 2000;
 
 export const STORAGE_KEYS = {
@@ -43,10 +42,14 @@ export interface DeploymentHistoryEntry {
 }
 
 export interface UserPreferences {
-  notifySuccess: boolean;
-  notifyWarning: boolean;
-  notifyError: boolean;
+  notifySuccess:      boolean;
+  notifyWarning:      boolean;
+  notifyError:        boolean;
   notifyIntervention: boolean;
+  animationsEnabled:  boolean;
+  historyLimitType:   'count' | 'days';
+  historyMaxCount:    number;
+  historyMaxDays:     number;
 }
 
 export interface ActiveDeploymentState {
@@ -87,6 +90,16 @@ export interface UpdatePreferencesMessage {
   payload: UserPreferences;
 }
 
+export interface OpenDeploymentMessage {
+  type: 'openDeployment';
+  payload: { url: string };
+}
+
+export interface DeleteHistoryEntryMessage {
+  type: 'deleteHistoryEntry';
+  payload: { id: string };
+}
+
 export interface HistoryResponseMessage {
   type: 'historyResponse';
   payload: { history: DeploymentHistoryEntry[] };
@@ -110,7 +123,9 @@ export type BackgroundInboundMessage =
   | GetActiveDeploymentsMessage
   | GetPreferencesMessage
   | UpdatePreferencesMessage
-  | ClearBadgeMessage;
+  | ClearBadgeMessage
+  | OpenDeploymentMessage
+  | DeleteHistoryEntryMessage;
 
 export type ContentInboundMessage = PlaySoundMessage;
 

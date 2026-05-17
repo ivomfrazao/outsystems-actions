@@ -148,8 +148,10 @@
       display: flex;
       align-items: stretch;
       border-bottom: 1px solid var(--c-card-border);
+      cursor: pointer;
     }
     .card:last-child { border-bottom: none; }
+    .card:hover { background: var(--c-btn-bg); }
 
     .card__accent {
       width: 3px;
@@ -205,21 +207,38 @@
       text-overflow: ellipsis;
     }
 
-    /* View button lives in .card__top for natural vertical alignment with the tag */
-    .btn-view {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--c-text-primary);
-      background: var(--c-btn-bg);
-      border: 1px solid var(--c-btn-border);
-      border-radius: 4px;
-      padding: 2px 8px;
-      line-height: 18px;
-      white-space: nowrap;
+    /* Delete button: shown only on history cards, stops propagation so it
+       doesn't also trigger the card's open action */
+    .btn-delete {
+      font-size: 13px;
+      line-height: 1;
+      color: var(--c-text-muted);
+      padding: 2px 4px;
+      border-radius: 3px;
       flex-shrink: 0;
-      transition: background 0.1s;
+      transition: color 0.1s, background 0.1s;
     }
-    .btn-view:hover { background: var(--c-btn-hover); }
+    .btn-delete:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+    /* ── Card animations ── */
+    /* .popup--animated is toggled by the Animations preference. When absent,
+       no keyframe animations fire — cards appear and disappear instantly. */
+    @keyframes card-enter {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes card-leave {
+      from { opacity: 1; max-height: 80px; }
+      to   { opacity: 0; max-height: 0; }
+    }
+    .popup--animated .card--entering {
+      animation: card-enter 0.2s ease forwards;
+    }
+    .popup--animated .card--leaving {
+      animation: card-leave 0.25s ease forwards;
+      overflow: hidden;
+      pointer-events: none;
+    }
 
     /* ── Empty state ── */
     .empty {
@@ -242,6 +261,59 @@
       font-size: 12px;
       color: var(--c-text-primary);
     }
+
+    /* ── Segmented control (e.g. Dark Mode: Light / System / Dark) ── */
+    .seg {
+      display: flex;
+      border: 1px solid var(--c-btn-border);
+      border-radius: 5px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .seg__btn {
+      flex: 1;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--c-text-secondary);
+      background: var(--c-btn-bg);
+      border-right: 1px solid var(--c-btn-border);
+      white-space: nowrap;
+      transition: background 0.1s, color 0.1s;
+    }
+    .seg__btn:last-child { border-right: none; }
+    .seg__btn--active { background: var(--c-toggle-on); color: #ffffff; }
+
+    /* ── Radio-labeled pref rows (history limit type selector) ── */
+    .pref__radio-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .pref__radio-label input[type="radio"] {
+      accent-color: var(--c-toggle-on);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ── Number input for history settings ── */
+    .pref__input {
+      width: 56px;
+      text-align: right;
+      font: inherit;
+      font-size: 12px;
+      color: var(--c-text-primary);
+      background: var(--c-btn-bg);
+      border: 1px solid var(--c-btn-border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      -moz-appearance: textfield;
+    }
+    .pref__input::-webkit-outer-spin-button,
+    .pref__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .pref__input:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
+    .pref__input:disabled { opacity: 0.35; cursor: not-allowed; }
 
     /* ── CSS-only toggle switch ── */
     .toggle {
@@ -345,8 +417,16 @@
         <div class="section__body">
           <div class="pref">
             <span class="pref__label">Dark Mode</span>
+            <div class="seg" id="darkModeSeg">
+              <button class="seg__btn" data-value="off">Light</button>
+              <button class="seg__btn seg__btn--active" data-value="system">System</button>
+              <button class="seg__btn" data-value="on">Dark</button>
+            </div>
+          </div>
+          <div class="pref">
+            <span class="pref__label">Animations</span>
             <label class="toggle">
-              <input type="checkbox" id="darkModeToggle">
+              <input type="checkbox" id="animationsEnabled">
               <span class="toggle__track"></span>
             </label>
           </div>
@@ -385,6 +465,28 @@
               <input type="checkbox" id="notifyIntervention">
               <span class="toggle__track"></span>
             </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section__header">
+          <span class="section__title">&#128337; History</span>
+        </div>
+        <div class="section__body">
+          <div class="pref">
+            <label class="pref__radio-label">
+              <input type="radio" name="historyLimitType" value="count" id="limitByCount" checked>
+              <span class="pref__label">Max deployments</span>
+            </label>
+            <input type="number" id="historyMaxCount" min="1" max="100" value="5" class="pref__input">
+          </div>
+          <div class="pref">
+            <label class="pref__radio-label">
+              <input type="radio" name="historyLimitType" value="days" id="limitByDays">
+              <span class="pref__label">Max days</span>
+            </label>
+            <input type="number" id="historyMaxDays" min="1" max="365" value="1" class="pref__input">
           </div>
         </div>
       </div>

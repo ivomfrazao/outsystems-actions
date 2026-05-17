@@ -1,6 +1,6 @@
 # OutSystems Actions — Main Specification
 
-**Version:** 1.2
+**Version:** 1.4
 **Purpose:** Define the functional and architectural requirements for a Chromium-based extension that monitors OutSystems Service Center and LifeTime and notifies the user on relevant events.
 
 ---
@@ -149,7 +149,7 @@ Badge must clear when:
 
 ## 6. Deployment History
 
-The extension must maintain a history of the **last 5 detected deployments** that reached a **final** state.
+The extension must maintain a history of detected deployments that reached a **final** state.
 
 Each entry must include:
 
@@ -162,26 +162,92 @@ Each entry must include:
 Storage requirements:
 
 - Use `chrome.storage.local` for persistent storage across sessions
-- Automatically remove the oldest entry when exceeding 5
+- Enforce limits automatically whenever a new entry is added or history settings change
+
+### 6.1 History Limits
+
+The user chooses **one** limit mode; only the selected mode is enforced at any time:
+
+| Mode | Default value | Range | Behaviour |
+| --- | --- | --- | --- |
+| Max deployments | 5 | 1–100 | Keeps only the N most recent entries |
+| Max days | 1 | 1–365 | Removes entries older than N days |
+
+The default mode is **Max deployments**. Switching modes or changing the value enforces the new limit immediately on existing history.
+
+### 6.2 Deployment List Ordering
+
+- Active (in-progress) deployments appear first, sorted by start time descending (most recent first).
+- Concluded (history) entries follow, sorted by completion timestamp descending (most recent first).
+
+### 6.3 Popup Display and Card Actions
 
 The history must be displayed in the extension popup.
+
+Each card in the deployment list must support the following actions:
+
+#### Open / View
+
+Clicking anywhere on the card must navigate to the deployment result page:
+
+1. The extension first searches for an **existing browser tab** whose URL matches the deployment URL (using path and query string comparison, ignoring protocol and host differences on the same server).
+2. If a matching tab is found, it must be **focused** and its browser window brought to the foreground. No new tab is opened.
+3. If no matching tab exists, a **new tab** must be opened with the deployment URL.
+
+#### Delete from History
+
+Each history card must include a dedicated **delete button** (×).
+
+- Clicking the delete button removes that entry from history immediately.
+- The delete button must **not** trigger the open action.
+- The button must stop click event propagation.
 
 ---
 
 ## 7. User Preferences
 
-The extension must allow the user to configure which **final** outcomes trigger notifications.
+The extension must allow the user to configure the following settings. All preferences persist across sessions via `chrome.storage.local`.
 
-Supported filters:
+### 7.0 Appearance — Dark Mode
+
+The popup supports three theme modes, selectable via a segmented control:
+
+| Mode | Behaviour |
+| --- | --- |
+| Light | Always uses the light theme |
+| System | Follows the OS/browser dark-mode preference |
+| Dark | Always uses the dark theme |
+
+Default: **System**. The selected mode persists across sessions, stored as `'on'`, `'off'`, or `'system'` in `chrome.storage.local` under the key `darkMode`. When reading a stored boolean (legacy format), `true` maps to `'on'` and `false` maps to `'off'`.
+
+### 7.1 Notification Filters
+
+Controls which **final** outcomes trigger browser notifications and sound alerts:
 
 - success
 - warning
 - error
 - intervention
 
-Preferences must persist across sessions via `chrome.storage.local`.
-
 `in_progress` is never user-configurable and never triggers a notification.
+
+### 7.2 Animations
+
+A global **Animations** toggle controls whether card enter/leave animations play in the popup.
+
+- When enabled, cards animate in when they appear and animate out when they are removed.
+- When disabled, cards appear and disappear instantly with no transition.
+- The toggle must be respected everywhere animations could occur; there must be no animation bypass.
+- Default: enabled.
+
+### 7.3 History Limits
+
+The user selects one limit mode (see §6.1) and sets the corresponding value:
+
+- **Mode: Max deployments** — integer, default 5, range 1–100. Only the N most recent entries are kept.
+- **Mode: Max days** — integer, default 1, range 1–365. Entries older than N days are removed.
+
+Only the active mode is enforced. Changing the mode or the value applies immediately to existing history.
 
 ---
 
@@ -218,8 +284,14 @@ Responsibilities:
 
 Responsibilities:
 
-- Display last 5 deployments
+- Display active (in-progress) and history deployments as clickable cards
+- Card click opens the deployment, reusing an existing tab when possible (see §6.2)
+- History cards expose a delete button to remove individual entries
+- Animate cards in/out when they appear or disappear (gated by the Animations preference)
 - Provide notification preference toggles
+- Provide a Dark Mode segmented control (Light / System / Dark)
+- Provide an Animations toggle
+- Provide history limit settings (mode: max count or max days)
 - Clear badge when opened
 
 ### 8.2 Permissions

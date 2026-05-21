@@ -253,6 +253,25 @@ function handleDeploymentUpdate(
   }
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// chrome.tabs.query({}) (without a url pattern) is required here because
+// match patterns don't support query strings, so we filter manually with
+// sameDeploymentUrl instead.
+function openDeploymentUrl(url: string): void {
+  chrome.tabs.query({}, (tabs) => {
+    const tab = tabs.find(t => t.url !== undefined && sameDeploymentUrl(t.url, url));
+    if (tab?.id !== undefined) {
+      chrome.tabs.update(tab.id, { active: true });
+      if (tab.windowId !== undefined) {
+        chrome.windows.update(tab.windowId, { focused: true });
+      }
+    } else {
+      chrome.tabs.create({ url });
+    }
+  });
+}
+
 // ── Message listener ──────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((
@@ -291,22 +310,9 @@ chrome.runtime.onMessage.addListener((
     case 'clearBadge':
       clearBadge();
       break;
-    // chrome.tabs.query({}) (without a url pattern) is required here because
-    // match patterns don't support query strings, so we filter manually with
-    // sameDeploymentUrl instead.
     case 'openDeployment': {
       const { url } = message.payload;
-      chrome.tabs.query({}, (tabs) => {
-        const tab = tabs.find(t => t.url !== undefined && sameDeploymentUrl(t.url, url));
-        if (tab?.id !== undefined) {
-          chrome.tabs.update(tab.id, { active: true });
-          if (tab.windowId !== undefined) {
-            chrome.windows.update(tab.windowId, { focused: true });
-          }
-        } else {
-          chrome.tabs.create({ url });
-        }
-      });
+      openDeploymentUrl(url);
       break;
     }
     case 'deleteHistoryEntry': {
@@ -325,12 +331,7 @@ chrome.notifications.onClicked.addListener((notificationId: string) => {
     const id = notificationId.replace(/^deployment-/, '');
     const entry = deploymentHistory.find(h => h.id === id);
     if (entry) {
-      chrome.tabs.query({ url: entry.url }, (tabs) => {
-        const tab = tabs[0];
-        if (tab?.id !== undefined) {
-          chrome.tabs.update(tab.id, { active: true });
-        }
-      });
+      openDeploymentUrl(entry.url);
     }
     clearBadge();
   }

@@ -79,7 +79,6 @@ export interface DeploymentUpdateMessage {
   };
 }
 
-export interface PlaySoundMessage             { type: 'playSound'; }
 export interface GetHistoryMessage            { type: 'getHistory'; }
 export interface GetActiveDeploymentsMessage  { type: 'getActiveDeployments'; }
 export interface GetPreferencesMessage        { type: 'getPreferences'; }
@@ -126,8 +125,6 @@ export type BackgroundInboundMessage =
   | ClearBadgeMessage
   | OpenDeploymentMessage
   | DeleteHistoryEntryMessage;
-
-export type ContentInboundMessage = PlaySoundMessage;
 
 export type PopupResponseMessage =
   | HistoryResponseMessage

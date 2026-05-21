@@ -126,6 +126,7 @@ function buildCard(
     const del = document.createElement('button');
     del.className = 'btn-delete';
     del.title = 'Delete from history';
+    del.setAttribute('aria-label', 'Delete from history');
     del.textContent = '×';
     del.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -216,13 +217,19 @@ function renderDeployments(active: ActiveDeploymentState[], history: DeploymentH
     }
   }
 
-  // Add cards that are new to the desired set (appended in order at the end;
-  // existing cards remain in their current DOM positions).
-  for (const { id, build } of desired) {
+  // Add cards that are new to the desired set, inserted at the correct position
+  // so inProgress cards always land above history cards without a full re-render.
+  for (let i = 0; i < desired.length; i++) {
+    const { id, build } = desired[i];
     if (!renderedCardIds.has(id)) {
       const el = build();
       if (animationsEnabled) el.classList.add('card--entering');
-      list.appendChild(el);
+      let referenceNode: HTMLElement | null = null;
+      for (let j = i + 1; j < desired.length; j++) {
+        const next = list.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(desired[j].id)}"]`);
+        if (next) { referenceNode = next; break; }
+      }
+      list.insertBefore(el, referenceNode);
       renderedCardIds.add(id);
     }
   }

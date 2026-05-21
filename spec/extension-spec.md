@@ -15,7 +15,6 @@ The extension monitors deployment and publish operations in:
 When a deployment finishes or requires human intervention, the extension:
 
 - Displays a browser notification
-- Plays a default sound
 - Updates a badge on the extension icon
 - Records the event in a short deployment history
 
@@ -77,6 +76,8 @@ Solution publish operations may involve:
 - Multiple eSpaces
 - Multi-step processes
 
+The solution name must be extracted from the page heading element (the element whose `id` ends with `wtTitle_wtTitle`), which contains text in the form `"Publish ... Solution <Name>"`. The page title is generic ("Upload/Publish Solution") and does not include the name.
+
 #### 3.1.2 LifeTime
 
 The extension must detect states of **Deployment Plan executions**.
@@ -109,19 +110,23 @@ When a deployment reaches a **final state** (`success`, `warning`, `error`, `int
 - Timestamp
 - Link or reference to the originating tab
 
+The notification **title** must follow the format `"<Type> <Action> <Status>"`, where:
+
+| Field  | eSpace      | Solution    | LifeTime    |
+|--------|-------------|-------------|-------------|
+| Type   | Application | Solution    | LifeTime    |
+| Action | Publish     | Publish     | Deployment  |
+| Status | Successful  | Successful  | Successful  |
+
+Status values (same for all types): `Successful`, `with Warnings`, `with Errors`, `Needs Intervention`.
+
+Examples: `"Solution Publish Successful"`, `"Application Publish with Warnings"`, `"LifeTime Deployment with Errors"`.
+
 No notification must be shown for `in_progress` states.
 
 Clicking the notification must focus the corresponding tab.
 
-### 4.2 Sound Alerts
-
-A default sound must play when a deployment reaches a final state or requires manual intervention.
-
-Sound playback is executed by the content script, triggered by a message from the background service worker. This is required because MV3 service workers do not have access to the Web Audio API.
-
-Custom sounds are out of scope.
-
-### 4.3 Tab Attention Indicator
+### 4.2 Tab Attention Indicator
 
 The extension must trigger a visual attention mechanism, such as flashing the tab title or any browser-supported attention indicator.
 
@@ -179,6 +184,7 @@ The default mode is **Max deployments**. Switching modes or changing the value e
 
 - Active (in-progress) deployments appear first, sorted by start time descending (most recent first).
 - Concluded (history) entries follow, sorted by completion timestamp descending (most recent first).
+- This ordering must be maintained during live updates (auto-refresh): newly appearing cards must be inserted at their correct position in the list, not appended to the bottom.
 
 ### 6.3 Popup Display and Card Actions
 
@@ -193,6 +199,8 @@ Clicking anywhere on the card must navigate to the deployment result page:
 1. The extension first searches for an **existing browser tab** whose URL matches the deployment URL (using path and query string comparison, ignoring protocol and host differences on the same server).
 2. If a matching tab is found, it must be **focused** and its browser window brought to the foreground. No new tab is opened.
 3. If no matching tab exists, a **new tab** must be opened with the deployment URL.
+
+**Revisit suppression**: if the newly-opened tab's content script reports an `InProgress` status as its first message but history already contains a completed entry for the same URL, the background must ignore that message. This prevents a transient `InProgress` detection during page load from creating a false active card alongside the existing history card.
 
 #### Delete from History
 
@@ -222,7 +230,7 @@ Default: **System**. The selected mode persists across sessions, stored as `'on'
 
 ### 7.1 Notification Filters
 
-Controls which **final** outcomes trigger browser notifications and sound alerts:
+Controls which **final** outcomes trigger browser notifications:
 
 - success
 - warning
@@ -264,7 +272,6 @@ Responsibilities:
 - Detect deployment status changes (including `in_progress` and final states)
 - Extract metadata (deployment name, environment)
 - Send status events to the background service worker
-- Execute sound playback when instructed by the background service worker
 
 #### 8.1.2 Background Service Worker
 
@@ -275,7 +282,6 @@ Responsibilities:
 - Detect transitions from `in_progress` to a final state
 - Apply user preferences before triggering any output
 - Generate browser notifications for final states
-- Trigger sound playback via the content script (delegated because service workers lack Web Audio API access)
 - Update badge indicators
 - Maintain deployment history in `chrome.storage.local`
 - Handle notification click events by focusing the originating tab via `chrome.tabs.update`
@@ -303,7 +309,6 @@ The extension requires:
 - `scripting` — for dynamic script injection
 - `storage` — for `chrome.storage.local` (preferences, history) and `chrome.storage.session` (active deployment state)
 - Host permissions for Service Center and LifeTime domains
-- `web_accessible_resources` declaration for `sounds/notification.wav` so content scripts can load and play the sound file
 
 ---
 
@@ -364,8 +369,15 @@ Mapped to: `intervention`.
 
 Out of scope:
 
-- Custom sound uploads
 - Deployment analytics
 - Syncing history across devices
 - OutSystems API integrations
 - Modifying OutSystems UI
+
+---
+
+## 11. Considered but Not Implemented
+
+### Sound Alerts
+
+Playing a sound on deployment completion was considered but is not feasible in MV3 extensions. Chrome's autoplay policy blocks audio in background tabs — the sound would only fire when the user manually focuses the tab, at which point the result is already visible. The browser popup notification covers this use case reliably, so sound alerts were ruled out.

@@ -1,5 +1,4 @@
 import {
-  type ContentInboundMessage,
   type DeploymentStatus,
   type DeploymentType,
   DeploymentStatus as Status,
@@ -59,6 +58,15 @@ function extractMetadata(): void {
     const tableText = document.getElementById('MessagesTable')?.textContent ?? '';
     const match = tableText.match(/Creating Application '([^']+)'/);
     deploymentName = match?.[1] ?? null;
+  }
+
+  // For Solution publishes the title is generic ("Upload/Publish Solution"); the
+  // name is in the page heading: "Publish Running Version of Solution <Name>".
+  // The heading element's id is dynamic but always ends with wtTitle_wtTitle.
+  if (!deploymentName && deploymentType === DType.Solution) {
+    const headingText = document.querySelector('[id$="wtTitle_wtTitle"]')?.textContent?.trim() ?? '';
+    const match = headingText.match(/Solution\s+(.+)$/i);
+    deploymentName = match?.[1]?.trim() ?? null;
   }
 
   // Server name from the sidebar's server info block — more stable than hostname.
@@ -149,9 +157,3 @@ extractMetadata();
 
 setInterval(checkForUpdates, POLL_INTERVAL_MS);
 
-chrome.runtime.onMessage.addListener((message: ContentInboundMessage) => {
-  if (message.type === 'playSound') {
-    const audio = new Audio(chrome.runtime.getURL('sounds/notification.wav'));
-    audio.play().catch(() => {});
-  }
-});

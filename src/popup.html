@@ -38,7 +38,7 @@
       --c-section-head-bdr: #2d2d45;
       --c-text-primary:     #f1f1f6;
       --c-text-secondary:   #9ca3af;
-      --c-text-muted:       #6b7280;
+      --c-text-muted:       #8b95a8;
       --c-nav-bg:           #1a1a2e;
       --c-nav-border:       #2d2d45;
       --c-nav-inactive:     #9ca3af;
@@ -198,6 +198,12 @@
     .card__tag--error        { background: #fee2e2; color: #991b1b; }
     .card__tag--intervention { background: #f3e8ff; color: #6b21a8; }
 
+    .popup--dark .card__tag--in-progress  { background: #3d2700; color: #fbbf24; }
+    .popup--dark .card__tag--success      { background: #052e16; color: #4ade80; }
+    .popup--dark .card__tag--warning      { background: #3d2700; color: #fbbf24; }
+    .popup--dark .card__tag--error        { background: #3f0505; color: #f87171; }
+    .popup--dark .card__tag--intervention { background: #2e1065; color: #c084fc; }
+
     .card__meta {
       font-size: 11px;
       color: var(--c-text-secondary);
@@ -219,6 +225,7 @@
       transition: color 0.1s, background 0.1s;
     }
     .btn-delete:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+    .btn-delete:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
 
     /* ── Card animations ── */
     /* .popup--animated is toggled by the Animations preference. When absent,

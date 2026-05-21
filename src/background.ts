@@ -129,15 +129,13 @@ function clearBadge(): void {
   chrome.action.setBadgeText({ text: '' });
 }
 
-// ── Notifications & sound ─────────────────────────────────────────────────────
+// ── Notifications ────────────────────────────────────────────────────────────
 
-function playSound(status: FinalStatus, tabId: number): void {
-  if (userPreferences[PREF_KEY_MAP[status]]) {
-    chrome.tabs.sendMessage(tabId, { type: 'playSound' }, () => {
-      void chrome.runtime.lastError;
-    });
-  }
-}
+const TYPE_LABEL: Record<string, string> = {
+  [DeploymentType.eSpace]:             'Application',
+  [DeploymentType.Solution]:           'Solution',
+  [DeploymentType.LifeTimeDeployment]: 'LifeTime',
+};
 
 const ACTION_LABEL: Record<string, string> = {
   [DeploymentType.eSpace]:             'Publish',
@@ -145,15 +143,24 @@ const ACTION_LABEL: Record<string, string> = {
   [DeploymentType.LifeTimeDeployment]: 'Deployment',
 };
 
+const STATUS_LABEL: Record<FinalStatus, string> = {
+  [DeploymentStatus.Success]:      'Successful',
+  [DeploymentStatus.Warning]:      'with Warnings',
+  [DeploymentStatus.Error]:        'with Errors',
+  [DeploymentStatus.Intervention]: 'Needs Intervention',
+};
+
 function createNotification(entry: DeploymentHistoryEntry): void {
   if (!userPreferences[PREF_KEY_MAP[entry.status]]) {
     return;
   }
-  const action = ACTION_LABEL[entry.type] ?? 'Deployment';
+  const typeLabel   = TYPE_LABEL[entry.type]   ?? 'Deployment';
+  const action      = ACTION_LABEL[entry.type]  ?? 'Deployment';
+  const statusLabel = STATUS_LABEL[entry.status];
   const options: chrome.notifications.NotificationOptions<true> = {
     type: 'basic',
     iconUrl: 'icons/icon-48.png',
-    title: `${action} ${entry.status}`,
+    title: `${typeLabel} ${action} ${statusLabel}`,
     message: `${entry.name ?? 'Unknown'} in ${entry.environment ?? 'Unknown'} at ${new Date(entry.timestamp).toLocaleTimeString()}`,
     requireInteraction: false,
   };
@@ -172,6 +179,14 @@ function handleDeploymentUpdate(
   const payload = message.payload;
   const timestamp = Date.now();
   const id = `${timestamp}-${tabId}`;
+
+  // If history already has a result for this URL and this is the first message
+  // from the new tab, the page is still loading — skip to avoid a false
+  // in_progress card appearing alongside the existing history card.
+  if (!activeDeployments[tabId] && payload.status === DeploymentStatus.InProgress &&
+      deploymentHistory.some(h => sameDeploymentUrl(h.url, payload.url))) {
+    return;
+  }
 
   // Remove stale entries for the same deployment URL from other tabs (e.g. the
   // user opened the page in a new tab via the View button or a manual refresh).
@@ -226,7 +241,6 @@ function handleDeploymentUpdate(
         url: payload.url,
       };
       updateBadge(finalStatus);
-      playSound(finalStatus, tabId);
       createNotification(entry);
       addToHistory(entry);
     }

@@ -39,6 +39,8 @@ export interface DeploymentHistoryEntry {
   status: FinalStatus;
   timestamp: number;
   url: string;
+  startTime: string | null;
+  endTime: string | null;
 }
 
 export interface UserPreferences {
@@ -60,6 +62,8 @@ export interface ActiveDeploymentState {
   server: string | null;
   url: string;
   deploymentType: DeploymentType;
+  startTime: string | null;
+  endTime: string | null;
 }
 
 export type ActiveDeployments = Record<number, ActiveDeploymentState>;
@@ -76,6 +80,8 @@ export interface DeploymentUpdateMessage {
     deploymentType: DeploymentType;
     url: string;
     tabId: null;
+    startTime: string | null;
+    endTime: string | null;
   };
 }
 

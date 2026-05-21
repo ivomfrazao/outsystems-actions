@@ -91,6 +91,8 @@ function buildCard(
   timestamp: number,
   url: string,
   isHistory: boolean,
+  startTime: string | null,
+  endTime: string | null,
 ): HTMLElement {
   const t = TAG_LABELS[status];
 
@@ -149,7 +151,13 @@ function buildCard(
 
   // Meta row: server · environment · time (omit nulls)
   const metaParts = [server, environment].filter((p): p is string => p != null && p !== '');
-  metaParts.push(new Date(timestamp).toLocaleTimeString());
+  if (startTime && endTime) {
+    metaParts.push(`${startTime} → ${endTime}`);
+  } else if (startTime) {
+    metaParts.push(startTime);
+  } else {
+    metaParts.push(new Date(timestamp).toLocaleTimeString());
+  }
 
   const meta = document.createElement('div');
   meta.className = 'card__meta';
@@ -191,11 +199,11 @@ function renderDeployments(active: ActiveDeploymentState[], history: DeploymentH
   const desired: Array<{ id: string; build: () => HTMLElement }> = [
     ...inProgress.map(item => ({
       id: item.url,
-      build: () => buildCard(item.url, item.name, DeploymentStatus.InProgress, item.environment, item.server, item.lastUpdate, item.url, false),
+      build: () => buildCard(item.url, item.name, DeploymentStatus.InProgress, item.environment, item.server, item.lastUpdate, item.url, false, item.startTime, null),
     })),
     ...sortedHistory.map(item => ({
       id: item.id,
-      build: () => buildCard(item.id, item.name, item.status, item.environment, item.server, item.timestamp, item.url, true),
+      build: () => buildCard(item.id, item.name, item.status, item.environment, item.server, item.timestamp, item.url, true, item.startTime, item.endTime),
     })),
   ];
 

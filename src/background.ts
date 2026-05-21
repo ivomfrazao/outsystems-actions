@@ -190,13 +190,15 @@ function handleDeploymentUpdate(
 
   // Remove stale entries for the same deployment URL from other tabs (e.g. the
   // user opened the page in a new tab via the View button or a manual refresh).
-  // Preserve the original lastUpdate so the card start time doesn't reset.
+  // Preserve the original lastUpdate and startTime so the card times don't reset.
   let inheritedUpdate: number | undefined;
+  let inheritedStartTime: string | null | undefined;
   for (const existingId of Object.keys(activeDeployments).map(Number)) {
     if (existingId !== tabId && sameDeploymentUrl(activeDeployments[existingId].url, payload.url)) {
       const stale = activeDeployments[existingId];
       if (stale.currentStatus === payload.status) {
-        inheritedUpdate = stale.lastUpdate;
+        inheritedUpdate    = stale.lastUpdate;
+        inheritedStartTime = stale.startTime;
       }
       delete activeDeployments[existingId];
     }
@@ -220,6 +222,8 @@ function handleDeploymentUpdate(
       server: payload.server,
       url: payload.url,
       deploymentType: payload.deploymentType,
+      startTime: payload.startTime ?? inheritedStartTime ?? null,
+      endTime: payload.endTime,
     };
     activeDeployments[tabId] = next;
     persistActiveDeployments();
@@ -239,6 +243,8 @@ function handleDeploymentUpdate(
         status: finalStatus,
         timestamp,
         url: payload.url,
+        startTime: current.startTime ?? payload.startTime,
+        endTime: payload.endTime,
       };
       updateBadge(finalStatus);
       createNotification(entry);

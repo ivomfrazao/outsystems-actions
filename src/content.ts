@@ -29,6 +29,8 @@ let deploymentType: DeploymentType | null = null;
 let deploymentName: string | null = null;
 let environment: string | null = null;
 let serverName: string | null = null;
+let startTime: string | null = null;
+let endTime: string | null = null;
 
 // ── Detection ─────────────────────────────────────────────────────────────────
 
@@ -75,6 +77,17 @@ function extractMetadata(): void {
     ?.textContent?.trim() ?? null;
 }
 
+function extractTimestamps(): void {
+  const table = document.getElementById('MessagesTable');
+  if (!table) return;
+  const timeRe = /^\d{2}:\d{2}:\d{2}/;
+  const cells = Array.from(table.querySelectorAll<HTMLElement>('td.table-row'))
+    .filter(td => timeRe.test(td.textContent?.trim() ?? ''));
+  if (cells.length === 0) return;
+  startTime = cells[0].textContent!.trim().slice(0, 8);
+  endTime   = cells[cells.length - 1].textContent!.trim().slice(0, 8);
+}
+
 function detectStatus(): DeploymentStatus | null {
   const bodyText = document.body.innerText.toLowerCase();
 
@@ -115,6 +128,7 @@ const KEEPALIVE_POLLS = Math.round(20_000 / POLL_INTERVAL_MS);
 
 function sendUpdate(status: DeploymentStatus): void {
   extractMetadata();
+  extractTimestamps();
   chrome.runtime.sendMessage(
     {
       type: 'deploymentUpdate',
@@ -126,6 +140,8 @@ function sendUpdate(status: DeploymentStatus): void {
         deploymentType,
         url: window.location.href,
         tabId: null,
+        startTime,
+        endTime,
       },
     },
     () => { void chrome.runtime.lastError; }

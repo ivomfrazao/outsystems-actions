@@ -10,7 +10,8 @@
     "copy-assets": "cp src/manifest.json src/popup.html dist/ && cp -r src/icons dist/",
     "build": "npm run clean && npm run typecheck && npm run compile && npm run copy-assets",
     "watch": "node build.mjs --watch",
-    "bump": "node scripts/bump-version.mjs"
+    "bump": "node scripts/bump-version.mjs",
+    "package": "npm run build && cd dist && zip -r ../dist.zip . && echo \"Created dist.zip\""
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",

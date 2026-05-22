@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "OutSystems Actions",
   "version": "1.0.0",
-  "description": "Monitors OutSystems Service Center and LifeTime and notifies on relevant events such as deployments, publishes, and required interventions.",
+  "description": "Monitors OutSystems Service Center and LifeTime for deployments, publishes, and required interventions.",
   "permissions": [
     "notifications",
     "storage",

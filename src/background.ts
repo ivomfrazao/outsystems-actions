@@ -228,10 +228,12 @@ function handleDeploymentUpdate(
     activeDeployments[tabId] = next;
     persistActiveDeployments();
 
+    const transitionedFromInProgress = current?.currentStatus === DeploymentStatus.InProgress;
+    const firstMessageIsFinal = !current && !deploymentHistory.some(h => sameDeploymentUrl(h.url, payload.url));
+
     if (
       payload.status !== DeploymentStatus.InProgress &&
-      current &&
-      current.currentStatus === DeploymentStatus.InProgress
+      (transitionedFromInProgress || firstMessageIsFinal)
     ) {
       const finalStatus = payload.status;
       const entry: DeploymentHistoryEntry = {

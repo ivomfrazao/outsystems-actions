@@ -29,9 +29,13 @@ The extension must also recognise **in-progress** states but must not notify on 
 The extension must activate on URLs matching:
 
 - `*/ServiceCenter/*`
+- `*/Servicecenter/*`
+- `*/servicecenter/*`
 - `*/LifeTime/*`
+- `*/Lifetime/*`
+- `*/lifetime/*`
 
-It must remain inactive on all other domains.
+Both path segments are case-insensitive across OutSystems installations; all three casing variants of each must be covered. It must remain inactive on all other domains.
 
 ---
 
@@ -89,6 +93,10 @@ It must detect and classify:
 - `warning`
 - `error`
 - `intervention`
+
+LifeTime deployment pages use URL paths with varying capitalisation (`/LifeTime/`, `/Lifetime/`, `/lifetime/`). All three variants must be matched in the manifest and treated as case-insensitive in the content script.
+
+The success state is signalled by the text `"Deployment finished with success"` inside the finish-box element. The environment name must be extracted from the `<span class="TitleIdentifier">` element in the page heading (the page title format `"Deployment to <Env>"` does not use the `" - "` separator used by Service Center pages).
 
 #### 3.1.3 Multi-Tab Behaviour
 

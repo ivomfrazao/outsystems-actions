@@ -16,7 +16,7 @@ const URL_PATTERNS = [
 
 const STATUS_KEYWORDS = {
   [Status.InProgress]:   ['publishing', 'deploying', 'running deployment plan'],
-  [Status.Success]:      ['published successfully', 'successfully published', 'completed successfully'],
+  [Status.Success]:      ['published successfully', 'successfully published', 'completed successfully', 'finished with success'],
   [Status.Warning]:      ['published with warnings', 'completed with warnings'],
   [Status.Error]:        ['compilation error', 'completed with errors', 'aborted'],
   [Status.Intervention]: ['waiting for user input', 'conflict detected', 'merge required', 'approval pending'],
@@ -35,8 +35,8 @@ let endTime: string | null = null;
 // ── Detection ─────────────────────────────────────────────────────────────────
 
 function detectDeploymentType(): DeploymentType | null {
-  const url = window.location.href;
-  return URL_PATTERNS.find(({ pattern }) => url.includes(pattern))?.type ?? null;
+  const urlLower = window.location.href.toLowerCase();
+  return URL_PATTERNS.find(({ pattern }) => urlLower.includes(pattern.toLowerCase()))?.type ?? null;
 }
 
 function extractMetadata(): void {
@@ -75,6 +75,12 @@ function extractMetadata(): void {
   // Targets: .sc-content-left .margin-top-base > div:first-child
   serverName = document.querySelector('.sc-content-left .margin-top-base > div:first-child')
     ?.textContent?.trim() ?? null;
+
+  // LifeTime titles are "Deployment to <Env>" with no " - " separator; extract
+  // the environment from the .TitleIdentifier span in the page heading instead.
+  if (!environment && deploymentType === DType.LifeTimeDeployment) {
+    environment = document.querySelector('.TitleIdentifier')?.textContent?.trim() ?? null;
+  }
 }
 
 function extractTimestamps(): void {

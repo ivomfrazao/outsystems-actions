@@ -11,13 +11,21 @@
   ],
   "host_permissions": [
     "*://*/ServiceCenter/*",
-    "*://*/LifeTime/*"
+    "*://*/Servicecenter/*",
+    "*://*/servicecenter/*",
+    "*://*/LifeTime/*",
+    "*://*/Lifetime/*",
+    "*://*/lifetime/*"
   ],
   "content_scripts": [
     {
       "matches": [
         "*://*/ServiceCenter/*",
-        "*://*/LifeTime/*"
+        "*://*/Servicecenter/*",
+        "*://*/servicecenter/*",
+        "*://*/LifeTime/*",
+        "*://*/Lifetime/*",
+        "*://*/lifetime/*"
       ],
       "js": [
         "content.js"

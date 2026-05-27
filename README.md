@@ -6,6 +6,7 @@ A Chromium extension that monitors OutSystems Service Center and LifeTime and no
 
 - Detects deployment statuses in real-time
 - Browser notifications for final states (success, warning, error, intervention)
+- Stale deployment detection: if the browser is closed while a deployment is running, an "Unknown" history entry and notification are created on the next browser start; reopening the deployment page resolves the entry to its real status
 - Badge indicator on extension icon
 - Deployment history with configurable limits (max count and max age in days)
 - Click any card to open the deployment — reuses an existing tab when possible

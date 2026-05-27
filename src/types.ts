@@ -13,6 +13,7 @@ export const DeploymentStatus = {
   Warning:      'warning',
   Error:        'error',
   Intervention: 'intervention',
+  Unknown:      'unknown',
 } as const;
 export type DeploymentStatus = (typeof DeploymentStatus)[keyof typeof DeploymentStatus];
 
@@ -23,9 +24,10 @@ export type FinalStatus = Exclude<DeploymentStatus, typeof DeploymentStatus.InPr
 export const POLL_INTERVAL_MS = 2000;
 
 export const STORAGE_KEYS = {
-  activeDeployments: 'activeDeployments',
-  preferences:       'preferences',
-  history:           'history',
+  activeDeployments:  'activeDeployments',
+  preferences:        'preferences',
+  history:            'history',
+  pendingDeployments: 'pendingDeployments',
 } as const;
 
 // ── Data model interfaces ─────────────────────────────────────────────────────
@@ -67,6 +69,16 @@ export interface ActiveDeploymentState {
 }
 
 export type ActiveDeployments = Record<number, ActiveDeploymentState>;
+
+export interface PendingDeploymentEntry {
+  type: DeploymentType;
+  name: string | null;
+  environment: string | null;
+  server: string | null;
+  url: string;
+  startTime: string | null;
+}
+export type PendingDeployments = Record<string, PendingDeploymentEntry>;
 
 // ── Message interfaces ────────────────────────────────────────────────────────
 

@@ -14,6 +14,7 @@ const TAG_LABELS: Record<string, { label: string; style: TagStyle }> = {
   [DeploymentStatus.Warning]:      { label: 'Warning',      style: 'warning'      },
   [DeploymentStatus.Error]:        { label: 'Error',        style: 'error'        },
   [DeploymentStatus.Intervention]: { label: 'Intervention', style: 'intervention' },
+  [DeploymentStatus.Unknown]:      { label: 'Unknown',      style: 'error'        },
 };
 
 // ── Theme ────────────────────────────────────────────────────────────────────

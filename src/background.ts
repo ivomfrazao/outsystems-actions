@@ -5,6 +5,8 @@ import type {
   DeploymentHistoryEntry,
   DeploymentUpdateMessage,
   FinalStatus,
+  PendingDeploymentEntry,
+  PendingDeployments,
   PopupResponseMessage,
   UserPreferences,
 } from './types';
@@ -21,6 +23,7 @@ const PREF_KEY_MAP = {
   [DeploymentStatus.Warning]:      'notifyWarning',
   [DeploymentStatus.Error]:        'notifyError',
   [DeploymentStatus.Intervention]: 'notifyIntervention',
+  [DeploymentStatus.Unknown]:      'notifyError',
 } as const satisfies Record<FinalStatus, keyof UserPreferences>;
 
 const BADGE_CONFIG = {
@@ -28,6 +31,7 @@ const BADGE_CONFIG = {
   [DeploymentStatus.Warning]:      { text: '!', color: '#FFFF00' },
   [DeploymentStatus.Error]:        { text: '!', color: '#FF0000' },
   [DeploymentStatus.Intervention]: { text: '!', color: '#FF0000' },
+  [DeploymentStatus.Unknown]:      { text: '?', color: '#808080' },
 } as const satisfies Record<FinalStatus, { text: string; color: string }>;
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -74,6 +78,17 @@ chrome.storage.local.get(
   }
 );
 
+let pendingDeployments: PendingDeployments = {};
+
+chrome.storage.local.get(
+  [STORAGE_KEYS.pendingDeployments],
+  (result: { pendingDeployments?: PendingDeployments }) => {
+    if (result.pendingDeployments) {
+      pendingDeployments = result.pendingDeployments;
+    }
+  }
+);
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sameDeploymentUrl(a: string, b: string): boolean {
@@ -98,6 +113,16 @@ function savePreferences(): void {
 
 function persistActiveDeployments(): void {
   chrome.storage.session.set({ [STORAGE_KEYS.activeDeployments]: activeDeployments });
+}
+
+function persistPendingDeployments(): void {
+  chrome.storage.local.set({ [STORAGE_KEYS.pendingDeployments]: pendingDeployments });
+}
+
+function hasUnknownEntryForUrl(url: string): boolean {
+  return deploymentHistory.some(
+    h => h.status === DeploymentStatus.Unknown && sameDeploymentUrl(h.url, url)
+  );
 }
 
 // Called both when a new entry is added and when preferences change, so limits
@@ -148,6 +173,7 @@ const STATUS_LABEL: Record<FinalStatus, string> = {
   [DeploymentStatus.Warning]:      'with Warnings',
   [DeploymentStatus.Error]:        'with Errors',
   [DeploymentStatus.Intervention]: 'Needs Intervention',
+  [DeploymentStatus.Unknown]:      'Outcome Unknown',
 };
 
 function createNotification(entry: DeploymentHistoryEntry): void {
@@ -180,11 +206,13 @@ function handleDeploymentUpdate(
   const timestamp = Date.now();
   const id = `${timestamp}-${tabId}`;
 
-  // If history already has a result for this URL and this is the first message
-  // from the new tab, the page is still loading — skip to avoid a false
-  // in_progress card appearing alongside the existing history card.
+  // If history already has a conclusive result for this URL and this is the
+  // first message from the new tab, the page is still loading — skip to avoid
+  // a false in_progress card appearing alongside the existing history card.
+  // 'unknown' entries are not conclusive, so they don't trigger the skip.
   if (!activeDeployments[tabId] && payload.status === DeploymentStatus.InProgress &&
-      deploymentHistory.some(h => sameDeploymentUrl(h.url, payload.url))) {
+      deploymentHistory.some(h => sameDeploymentUrl(h.url, payload.url)) &&
+      !hasUnknownEntryForUrl(payload.url)) {
     return;
   }
 
@@ -201,6 +229,7 @@ function handleDeploymentUpdate(
         inheritedStartTime = stale.startTime;
       }
       delete activeDeployments[existingId];
+      delete pendingDeployments[String(existingId)];
     }
   }
 
@@ -228,8 +257,23 @@ function handleDeploymentUpdate(
     activeDeployments[tabId] = next;
     persistActiveDeployments();
 
+    if (payload.status === DeploymentStatus.InProgress) {
+      pendingDeployments[String(tabId)] = {
+        type: payload.deploymentType,
+        name: payload.name,
+        environment: payload.environment,
+        server: payload.server,
+        url: payload.url,
+        startTime: next.startTime,
+      };
+      persistPendingDeployments();
+    }
+
     const transitionedFromInProgress = current?.currentStatus === DeploymentStatus.InProgress;
-    const firstMessageIsFinal = !current && !deploymentHistory.some(h => sameDeploymentUrl(h.url, payload.url));
+    // Treat 'unknown' entries as absent: the real outcome wasn't observed, so a
+    // new final-state message for the same URL should replace the placeholder.
+    const firstMessageIsFinal = !current &&
+      !deploymentHistory.some(h => sameDeploymentUrl(h.url, payload.url) && h.status !== DeploymentStatus.Unknown);
 
     if (
       payload.status !== DeploymentStatus.InProgress &&
@@ -248,9 +292,15 @@ function handleDeploymentUpdate(
         startTime: current.startTime ?? payload.startTime,
         endTime: payload.endTime,
       };
+      // Remove any 'unknown' placeholder for this URL before recording the real outcome.
+      deploymentHistory = deploymentHistory.filter(
+        h => !(h.status === DeploymentStatus.Unknown && sameDeploymentUrl(h.url, payload.url))
+      );
       updateBadge(finalStatus);
       createNotification(entry);
       addToHistory(entry);
+      delete pendingDeployments[String(tabId)];
+      persistPendingDeployments();
     }
   }
 }
@@ -326,6 +376,48 @@ chrome.runtime.onMessage.addListener((
   }
 });
 
+// ── Startup stale check ───────────────────────────────────────────────────────
+
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.get(
+    [STORAGE_KEYS.pendingDeployments, STORAGE_KEYS.history, STORAGE_KEYS.preferences],
+    (result: {
+      pendingDeployments?: PendingDeployments;
+      history?: DeploymentHistoryEntry[];
+      preferences?: UserPreferences;
+    }) => {
+      const stale = result.pendingDeployments ?? {};
+      if (Object.keys(stale).length === 0) return;
+
+      // Sync in-memory state (async init may not have completed at startup time).
+      if (result.preferences) userPreferences   = result.preferences;
+      if (result.history)     deploymentHistory = result.history;
+
+      const timestamp = Date.now();
+      for (const entry of Object.values(stale)) {
+        const historyEntry: DeploymentHistoryEntry = {
+          id: `${timestamp}-unknown-${entry.url}`,
+          type: entry.type,
+          name: entry.name,
+          environment: entry.environment,
+          server: entry.server,
+          status: DeploymentStatus.Unknown,
+          timestamp,
+          url: entry.url,
+          startTime: entry.startTime,
+          endTime: null,
+        };
+        deploymentHistory.unshift(historyEntry);
+        createNotification(historyEntry);
+      }
+
+      enforceHistoryLimits();
+      pendingDeployments = {};
+      chrome.storage.local.remove(STORAGE_KEYS.pendingDeployments);
+    }
+  );
+});
+
 // ── Notification click ────────────────────────────────────────────────────────
 
 chrome.notifications.onClicked.addListener((notificationId: string) => {
@@ -333,7 +425,12 @@ chrome.notifications.onClicked.addListener((notificationId: string) => {
     const id = notificationId.replace(/^deployment-/, '');
     const entry = deploymentHistory.find(h => h.id === id);
     if (entry) {
-      openDeploymentUrl(entry.url);
+      if (entry.status === DeploymentStatus.Unknown) {
+        // Open the popup so the user can click through to recheck the deployment.
+        chrome.action.openPopup?.();
+      } else {
+        openDeploymentUrl(entry.url);
+      }
     }
     clearBadge();
   }

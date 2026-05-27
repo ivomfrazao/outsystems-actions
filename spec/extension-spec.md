@@ -1,6 +1,6 @@
 # OutSystems Actions — Main Specification
 
-**Version:** 1.4
+**Version:** 1.5
 **Purpose:** Define the functional and architectural requirements for a Chromium-based extension that monitors OutSystems Service Center and LifeTime and notifies the user on relevant events.
 
 ---
@@ -126,13 +126,13 @@ The notification **title** must follow the format `"<Type> <Action> <Status>"`, 
 | Action | Publish     | Publish     | Deployment  |
 | Status | Successful  | Successful  | Successful  |
 
-Status values (same for all types): `Successful`, `with Warnings`, `with Errors`, `Needs Intervention`.
+Status values (same for all types): `Successful`, `with Warnings`, `with Errors`, `Needs Intervention`, `Outcome Unknown`.
 
 Examples: `"Solution Publish Successful"`, `"Application Publish with Warnings"`, `"LifeTime Deployment with Errors"`.
 
 No notification must be shown for `in_progress` states.
 
-Clicking the notification must focus the corresponding tab.
+Clicking the notification must focus the corresponding tab. For `unknown` entries (see §6.3), clicking the notification must open the extension popup instead, so the user can navigate to the deployment page from there.
 
 ### 4.2 Tab Attention Indicator
 
@@ -160,6 +160,7 @@ The extension icon must display a badge representing the most recent **final** s
 | warning      | !          | Yellow       |
 | error        | !          | Red          |
 | intervention | !          | Red          |
+| unknown      | ?          | Gray         |
 
 `in_progress` must not update the badge.
 
@@ -218,7 +219,7 @@ Clicking anywhere on the card must navigate to the deployment result page:
 2. If a matching tab is found, it must be **focused** and its browser window brought to the foreground. No new tab is opened.
 3. If no matching tab exists, a **new tab** must be opened with the deployment URL.
 
-**Revisit suppression**: if the newly-opened tab's content script reports an `InProgress` status as its first message but history already contains a completed entry for the same URL, the background must ignore that message. This prevents a transient `InProgress` detection during page load from creating a false active card alongside the existing history card.
+**Revisit suppression**: if the newly-opened tab's content script reports an `InProgress` status as its first message but history already contains a **conclusive** completed entry for the same URL, the background must ignore that message. This prevents a transient `InProgress` detection during page load from creating a false active card alongside the existing history card. `unknown` entries are not considered conclusive for this purpose — reopening the page should resolve the entry (see §6.4).
 
 #### Delete from History
 
@@ -227,6 +228,41 @@ Each history card must include a dedicated **delete button** (×).
 - Clicking the delete button removes that entry from history immediately.
 - The delete button must **not** trigger the open action.
 - The button must stop click event propagation.
+
+### 6.4 Stale Deployment Detection on Browser Startup
+
+When the browser is closed while a deployment is `in_progress`, the content script stops polling and cannot report a final status. The extension must detect these interrupted deployments and notify the user on the next browser start.
+
+#### Persistent Pending Tracking
+
+The background service worker must persist a `pendingDeployments` map to `chrome.storage.local` (key: `pendingDeployments`). This map is keyed by tab ID (as a string) and stores enough metadata to reconstruct a history entry:
+
+- deployment type
+- name
+- environment
+- server
+- URL
+- start time
+
+When a deployment transitions to `in_progress`, the background must add it to the pending map and persist it. When a deployment reaches any final state, the background must remove it from the pending map and persist the map.
+
+#### Startup Check
+
+On `chrome.runtime.onStartup` (fires once per browser profile start, not on service worker restarts), the background must:
+
+1. Read `pendingDeployments`, `history`, and `preferences` from `chrome.storage.local` in a single storage call.
+2. For each pending entry, create a history record with status `unknown` and the current timestamp as completion time.
+3. Send a browser notification for each such entry (subject to the `notifyError` preference).
+4. Enforce history limits after all entries are added.
+5. Clear `pendingDeployments` from storage.
+
+#### Resolving an Unknown Entry
+
+When the user opens a deployment URL that has an `unknown` history entry:
+
+- The content script detects the current state and sends a `deploymentUpdate` message.
+- The background treats the `unknown` entry as absent for the purpose of revisit suppression and `firstMessageIsFinal` logic.
+- When a real final state is received for that URL, the `unknown` entry is removed from history and replaced with the actual result.
 
 ---
 
@@ -297,12 +333,14 @@ Responsibilities:
 
 - Track `in_progress` vs final states per tab
 - Persist active deployment state to `chrome.storage.session` to survive service worker restarts within the browser session
+- Persist in-progress deployments to `chrome.storage.local` (`pendingDeployments`) so interrupted deployments survive browser restarts
+- On `chrome.runtime.onStartup`, detect interrupted deployments and add `unknown` history entries with notifications
 - Detect transitions from `in_progress` to a final state
 - Apply user preferences before triggering any output
 - Generate browser notifications for final states
 - Update badge indicators
 - Maintain deployment history in `chrome.storage.local`
-- Handle notification click events by focusing the originating tab via `chrome.tabs.update`
+- Handle notification click events by focusing the originating tab via `chrome.tabs.update`; for `unknown` entries, open the extension popup instead
 
 #### 8.1.3 Popup UI
 
@@ -380,6 +418,14 @@ Examples:
 - "Approval pending"
 
 Mapped to: `intervention`.
+
+### 9.6 Unknown (Outcome Not Observed)
+
+Assigned by the background service worker at browser startup when a deployment was `in_progress` at the time the browser was closed. The page was never re-polled, so the actual outcome is not known.
+
+Not detected by the content script — synthesised internally on `chrome.runtime.onStartup`.
+
+Mapped to: `unknown`.
 
 ---
 

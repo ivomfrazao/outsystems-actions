@@ -20,6 +20,8 @@ const STATUS_KEYWORDS = {
   [Status.Warning]:      ['published with warnings', 'completed with warnings'],
   [Status.Error]:        ['compilation error', 'completed with errors', 'aborted'],
   [Status.Intervention]: ['waiting for user input', 'conflict detected', 'merge required', 'approval pending'],
+  // 'unknown' is synthesised by the background on startup; the content script never detects it.
+  [Status.Unknown]: [],
 } as const satisfies Record<DeploymentStatus, ReadonlyArray<string>>;
 
 const STATUS_INDICATORS: Record<DeploymentStatus, string> = {
@@ -28,6 +30,7 @@ const STATUS_INDICATORS: Record<DeploymentStatus, string> = {
   [Status.Warning]:      '🟡',
   [Status.Error]:        '🔴',
   [Status.Intervention]: '⚠️',
+  [Status.Unknown]:      '❓',
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────

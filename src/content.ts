@@ -22,8 +22,17 @@ const STATUS_KEYWORDS = {
   [Status.Intervention]: ['waiting for user input', 'conflict detected', 'merge required', 'approval pending'],
 } as const satisfies Record<DeploymentStatus, ReadonlyArray<string>>;
 
+const STATUS_INDICATORS: Record<DeploymentStatus, string> = {
+  [Status.InProgress]:   '🔵',
+  [Status.Success]:      '🟢',
+  [Status.Warning]:      '🟡',
+  [Status.Error]:        '🔴',
+  [Status.Intervention]: '⚠️',
+};
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
+const originalTitle = document.title;
 let currentStatus: DeploymentStatus | null = null;
 let deploymentType: DeploymentType | null = null;
 let deploymentName: string | null = null;
@@ -40,7 +49,7 @@ function detectDeploymentType(): DeploymentType | null {
 }
 
 function extractMetadata(): void {
-  const parts = document.title.trim().split(' - ');
+  const parts = originalTitle.trim().split(' - ');
   if (parts.length >= 3) {
     deploymentName = parts[0] ?? null;
     environment = parts[1] ?? null;
@@ -125,6 +134,10 @@ function detectStatus(): DeploymentStatus | null {
   return null;
 }
 
+function updateTabTitle(status: DeploymentStatus): void {
+  document.title = `${STATUS_INDICATORS[status]} ${originalTitle}`;
+}
+
 // ── Polling ───────────────────────────────────────────────────────────────────
 
 let pollsSinceLastSend = 0;
@@ -168,6 +181,7 @@ function checkForUpdates(): void {
 
   if (changed || keepalive) {
     currentStatus = status;
+    updateTabTitle(status);
     sendUpdate(status);
   }
 }

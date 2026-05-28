@@ -24,25 +24,27 @@ export type FinalStatus = Exclude<DeploymentStatus, typeof DeploymentStatus.InPr
 export const POLL_INTERVAL_MS = 2000;
 
 export const STORAGE_KEYS = {
-  activeDeployments:  'activeDeployments',
-  preferences:        'preferences',
-  history:            'history',
-  pendingDeployments: 'pendingDeployments',
+  deployments: 'deployments',
+  preferences: 'preferences',
 } as const;
 
 // ── Data model interfaces ─────────────────────────────────────────────────────
 
-export interface DeploymentHistoryEntry {
+// Single unified record for every deployment, active or concluded.
+// `tabId` is present only while the deployment is actively tracked (in_progress in a live tab).
+// `timestamp` is the last-keepalive time while in_progress and the completion time once concluded.
+export interface DeploymentEntry {
   id: string;
   type: DeploymentType;
   name: string | null;
   environment: string | null;
   server: string | null;
-  status: FinalStatus;
-  timestamp: number;
   url: string;
+  status: DeploymentStatus;
+  timestamp: number;
   startTime: string | null;
   endTime: string | null;
+  tabId?: number;
 }
 
 export interface UserPreferences {
@@ -55,30 +57,6 @@ export interface UserPreferences {
   historyMaxCount:    number;
   historyMaxDays:     number;
 }
-
-export interface ActiveDeploymentState {
-  currentStatus: DeploymentStatus | null;
-  lastUpdate: number;
-  name: string | null;
-  environment: string | null;
-  server: string | null;
-  url: string;
-  deploymentType: DeploymentType;
-  startTime: string | null;
-  endTime: string | null;
-}
-
-export type ActiveDeployments = Record<number, ActiveDeploymentState>;
-
-export interface PendingDeploymentEntry {
-  type: DeploymentType;
-  name: string | null;
-  environment: string | null;
-  server: string | null;
-  url: string;
-  startTime: string | null;
-}
-export type PendingDeployments = Record<string, PendingDeploymentEntry>;
 
 // ── Message interfaces ────────────────────────────────────────────────────────
 
@@ -97,10 +75,9 @@ export interface DeploymentUpdateMessage {
   };
 }
 
-export interface GetHistoryMessage            { type: 'getHistory'; }
-export interface GetActiveDeploymentsMessage  { type: 'getActiveDeployments'; }
-export interface GetPreferencesMessage        { type: 'getPreferences'; }
-export interface ClearBadgeMessage            { type: 'clearBadge'; }
+export interface GetDeploymentsMessage   { type: 'getDeployments'; }
+export interface GetPreferencesMessage   { type: 'getPreferences'; }
+export interface ClearBadgeMessage       { type: 'clearBadge'; }
 
 export interface UpdatePreferencesMessage {
   type: 'updatePreferences';
@@ -112,19 +89,14 @@ export interface OpenDeploymentMessage {
   payload: { url: string };
 }
 
-export interface DeleteHistoryEntryMessage {
-  type: 'deleteHistoryEntry';
+export interface DeleteDeploymentMessage {
+  type: 'deleteDeployment';
   payload: { id: string };
 }
 
-export interface HistoryResponseMessage {
-  type: 'historyResponse';
-  payload: { history: DeploymentHistoryEntry[] };
-}
-
-export interface ActiveDeploymentsResponseMessage {
-  type: 'activeDeploymentsResponse';
-  payload: { active: ActiveDeploymentState[] };
+export interface DeploymentsResponseMessage {
+  type: 'deploymentsResponse';
+  payload: { deployments: DeploymentEntry[] };
 }
 
 export interface PreferencesResponseMessage {
@@ -136,16 +108,14 @@ export interface PreferencesUpdatedMessage { type: 'preferencesUpdated'; }
 
 export type BackgroundInboundMessage =
   | DeploymentUpdateMessage
-  | GetHistoryMessage
-  | GetActiveDeploymentsMessage
+  | GetDeploymentsMessage
   | GetPreferencesMessage
   | UpdatePreferencesMessage
   | ClearBadgeMessage
   | OpenDeploymentMessage
-  | DeleteHistoryEntryMessage;
+  | DeleteDeploymentMessage;
 
 export type PopupResponseMessage =
-  | HistoryResponseMessage
-  | ActiveDeploymentsResponseMessage
+  | DeploymentsResponseMessage
   | PreferencesResponseMessage
   | PreferencesUpdatedMessage;

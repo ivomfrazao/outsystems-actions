@@ -1,12 +1,11 @@
 import type {
-  ActiveDeploymentState,
-  DeploymentHistoryEntry,
+  DeploymentEntry,
   PopupResponseMessage,
   UserPreferences,
 } from './types';
 import { DeploymentStatus } from './types';
 
-type TagStyle = 'in-progress' | 'success' | 'warning' | 'error' | 'intervention';
+type TagStyle = 'in-progress' | 'success' | 'warning' | 'error' | 'intervention' | 'unknown';
 
 const TAG_LABELS: Record<string, { label: string; style: TagStyle }> = {
   [DeploymentStatus.InProgress]:   { label: 'In Progress',  style: 'in-progress'  },
@@ -14,7 +13,7 @@ const TAG_LABELS: Record<string, { label: string; style: TagStyle }> = {
   [DeploymentStatus.Warning]:      { label: 'Warning',      style: 'warning'      },
   [DeploymentStatus.Error]:        { label: 'Error',        style: 'error'        },
   [DeploymentStatus.Intervention]: { label: 'Intervention', style: 'intervention' },
-  [DeploymentStatus.Unknown]:      { label: 'Unknown',      style: 'error'        },
+  [DeploymentStatus.Unknown]:      { label: 'Unknown',      style: 'unknown'      },
 };
 
 // ── Theme ────────────────────────────────────────────────────────────────────
@@ -133,7 +132,7 @@ function buildCard(
     del.textContent = '×';
     del.addEventListener('click', (e) => {
       e.stopPropagation();
-      chrome.runtime.sendMessage({ type: 'deleteHistoryEntry', payload: { id } });
+      chrome.runtime.sendMessage({ type: 'deleteDeployment', payload: { id } });
       // Optimistically remove the card from the DOM immediately.
       if (animationsEnabled) {
         card.classList.remove('card--entering');
@@ -179,30 +178,31 @@ function buildCard(
   return card;
 }
 
-function renderDeployments(active: ActiveDeploymentState[], history: DeploymentHistoryEntry[]): void {
+function renderDeployments(allDeployments: DeploymentEntry[]): void {
   const list  = document.querySelector<HTMLElement>('[data-list="deployments"]');
   const badge = document.querySelector<HTMLElement>('[data-badge="deployments"]');
   const empty = document.querySelector<HTMLElement>('[data-empty="deployments"]');
   if (!list) return;
 
-  const inProgress = active
-    .filter(d => d.currentStatus === DeploymentStatus.InProgress)
-    .sort((a, b) => b.lastUpdate - a.lastUpdate);
+  const inProgress = allDeployments
+    .filter(d => d.status === DeploymentStatus.InProgress)
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  const history = allDeployments
+    .filter(d => d.status !== DeploymentStatus.InProgress)
+    .sort((a, b) => b.timestamp - a.timestamp);
 
   const total = inProgress.length + history.length;
   if (badge) badge.textContent = String(total);
   if (empty) empty.style.display = total > 0 ? 'none' : '';
 
-  // Concluded entries are sorted descending by timestamp regardless of storage order.
-  const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
-
   // Build desired state as ordered list of { id, buildFn }
   const desired: Array<{ id: string; build: () => HTMLElement }> = [
     ...inProgress.map(item => ({
-      id: item.url,
-      build: () => buildCard(item.url, item.name, DeploymentStatus.InProgress, item.environment, item.server, item.lastUpdate, item.url, false, item.startTime, null),
+      id: item.id,
+      build: () => buildCard(item.id, item.name, DeploymentStatus.InProgress, item.environment, item.server, item.timestamp, item.url, false, item.startTime, null),
     })),
-    ...sortedHistory.map(item => ({
+    ...history.map(item => ({
       id: item.id,
       build: () => buildCard(item.id, item.name, item.status, item.environment, item.server, item.timestamp, item.url, true, item.startTime, item.endTime),
     })),
@@ -319,22 +319,10 @@ function updatePreferences(): void {
 // ── Entry point ──────────────────────────────────────────────────────────────
 
 function refresh(): void {
-  let active: ActiveDeploymentState[] = [];
-  let history: DeploymentHistoryEntry[] = [];
-  let loaded = 0;
-
-  function tryRender(): void {
-    if (++loaded === 2) renderDeployments(active, history);
-  }
-
-  chrome.runtime.sendMessage({ type: 'getActiveDeployments' }, (response: PopupResponseMessage) => {
-    if (response?.type === 'activeDeploymentsResponse') active = response.payload.active;
-    tryRender();
-  });
-
-  chrome.runtime.sendMessage({ type: 'getHistory' }, (response: PopupResponseMessage) => {
-    if (response?.type === 'historyResponse') history = response.payload.history;
-    tryRender();
+  chrome.runtime.sendMessage({ type: 'getDeployments' }, (response: PopupResponseMessage) => {
+    if (response?.type === 'deploymentsResponse') {
+      renderDeployments(response.payload.deployments);
+    }
   });
 }
 

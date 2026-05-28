@@ -99,7 +99,7 @@ function extractTimestamps(): void {
   const table = document.getElementById('MessagesTable');
   if (!table) return;
   const timeRe = /^\d{2}:\d{2}:\d{2}/;
-  const cells = Array.from(table.querySelectorAll<HTMLElement>('td.table-row'))
+  const cells = Array.from(table.querySelectorAll<HTMLElement>('td'))
     .filter(td => timeRe.test(td.textContent?.trim() ?? ''));
   if (cells.length === 0) return;
   startTime = cells[0].textContent!.trim().slice(0, 8);
@@ -107,7 +107,14 @@ function extractTimestamps(): void {
 }
 
 function detectStatus(): DeploymentStatus | null {
-  const bodyText = document.body.innerText.toLowerCase();
+  // Use textContent (not innerText) for final-state detection: eSpace publish
+  // stores the "successfully published" message in a collapsed sub-step row
+  // (display:none), which innerText skips. textContent includes all DOM text
+  // regardless of visibility, so collapsed rows are always checked.
+  // innerText is kept for the in-progress fallback to avoid matching hidden
+  // in-progress text that persists from earlier steps after completion.
+  const bodyAllText  = (document.body.textContent ?? '').toLowerCase();
+  const bodyText     = document.body.innerText.toLowerCase();
 
   // Check final states first — their keywords persist after completion and
   // must not be masked by in-progress signals still present in the DOM.
@@ -118,7 +125,7 @@ function detectStatus(): DeploymentStatus | null {
     Status.Intervention,
   ];
   const finalStatus = finalOrder.find(s =>
-    STATUS_KEYWORDS[s].some(kw => bodyText.includes(kw))
+    STATUS_KEYWORDS[s].some(kw => bodyAllText.includes(kw))
   );
   if (finalStatus) return finalStatus;
 
@@ -148,9 +155,21 @@ let pollsSinceLastSend = 0;
 // stays alive and session storage stays current after a worker restart.
 const KEEPALIVE_POLLS = Math.round(20_000 / POLL_INTERVAL_MS);
 
+function toHHMMSS(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 function sendUpdate(status: DeploymentStatus): void {
   extractMetadata();
   extractTimestamps();
+  // Fallback: when the page has no timestamped cells (e.g. Application Pack
+  // publish), record wall-clock times on first observation of each phase.
+  if (status === Status.InProgress && startTime === null) {
+    startTime = toHHMMSS(new Date());
+  } else if (status !== Status.InProgress && endTime === null) {
+    endTime = toHHMMSS(new Date());
+  }
   chrome.runtime.sendMessage(
     {
       type: 'deploymentUpdate',

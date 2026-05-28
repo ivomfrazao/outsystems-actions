@@ -20,6 +20,7 @@
 - [ ] Detects `warning`.
 - [ ] Detects `error`.
 - [ ] Detects `intervention`.
+- [ ] Opening or refreshing the tab when the publish is already complete detects `success` (not `in_progress`) immediately, even though the "Deploying" step name is visible and the success message is in a collapsed sub-step row.
 
 ### 2.2 Service Center — Solution Publish
 
@@ -96,6 +97,19 @@
 - [ ] Clicking the delete button removes that entry from history immediately.
 - [ ] Clicking the delete button does not trigger the open action.
 - [ ] In-progress (active) cards do not show a delete button.
+
+### 6.3 Unknown (Stale) Deployments
+
+- [ ] A deployment that was `in_progress` when the browser was closed appears in the popup as an `Unknown` history card on the next browser start.
+- [ ] A deployment that was `in_progress` when its tab is closed transitions to `Unknown` immediately (without waiting for browser restart).
+- [ ] Closing a tracked tab produces no `Unknown` OS notification; notifications for `unknown` only fire on browser startup.
+- [ ] The `Unknown` card uses a neutral gray tag, not the red error style.
+- [ ] The `Unknown` OS notification fires on the next browser startup (not at browser-close time).
+- [ ] If a restored-session tab reports the real deployment status before the background processes it, only the real-status notification is sent and no `Unknown` notification appears.
+- [ ] Clicking an `Unknown` card opens the deployment URL.
+- [ ] Reopening an `Unknown` deployment URL that is still `in_progress`: the Unknown card disappears immediately and is replaced by an active InProgress card.
+- [ ] Reopening an `Unknown` deployment URL that already has a final status: the Unknown card is replaced by a history card with the real status; no duplicate `Unknown` card remains.
+- [ ] When a real status replaces an `Unknown` entry, any `Unknown` OS notification already in the notification center is cleared automatically.
 
 ---
 

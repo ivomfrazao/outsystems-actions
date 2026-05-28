@@ -61,11 +61,15 @@ Detection sources may include:
 - AJAX polling responses
 - Any structured status indicators available on the page
 
+Final-state keywords (success, warning, error, intervention) must be searched using `textContent` (not `innerText`), because eSpace publish stores the final status message in a collapsed sub-step row (`display: none`) that `innerText` skips. In-progress keyword detection must continue to use `innerText` to avoid matching hidden in-progress text that persists in the DOM after completion.
+
 ##### 3.1.1.1 eSpace Publish
 
 The extension must detect states on the eSpace publish screen:
 
 - `/ServiceCenter/eSpace_Publish.aspx?EspaceId=<id>`
+
+Start and end times must be extracted from `MessagesTable` by finding all `<td>` cells whose text content begins with an `HH:MM:SS` pattern. The first such cell provides the start time and the last provides the end time.
 
 ##### 3.1.1.2 Solution Publish
 
@@ -73,6 +77,8 @@ The extension must detect states on the Solution publish screen:
 
 - `/ServiceCenter/Solution_Publish.aspx?SolutionId=<id>`
 - `/ServiceCenter/Solution_Publish.aspx?SolutionVersionId=<id>`
+
+Start and end times must be extracted using the same `MessagesTable` approach as eSpace publish (see §3.1.1.1).
 
 Solution publish operations may involve:
 
@@ -181,7 +187,15 @@ Each entry must include:
 - Environment
 - Final status
 - Timestamp
+- Start time and end time (extracted from `MessagesTable` when available)
 - URL to the deployment result page
+
+Cards display start and end times when available (`HH:MM:SS → HH:MM:SS`), start time only when end time is absent, or the browser-local completion time as a fallback.
+
+Start and end times are sourced in order of preference:
+
+1. `MessagesTable` DOM cells beginning with `HH:MM:SS` (Service Center eSpace and Solution publishes).
+2. Wall-clock time recorded by the content script on first observation of each phase — used when the DOM table has no timestamped cells (e.g. Application Pack publish pages that use a step-based table without explicit timestamps).
 
 Storage requirements:
 
@@ -229,40 +243,38 @@ Each history card must include a dedicated **delete button** (×).
 - The delete button must **not** trigger the open action.
 - The button must stop click event propagation.
 
-### 6.4 Stale Deployment Detection on Browser Startup
+### 6.4 Stale Deployment Detection
 
-When the browser is closed while a deployment is `in_progress`, the content script stops polling and cannot report a final status. The extension must detect these interrupted deployments and notify the user on the next browser start.
+When the content script stops polling (tab closed or browser closed), the background cannot receive a final status. Two events trigger the `in_progress` → `unknown` transition; only one sends a notification.
 
-#### Persistent Pending Tracking
+#### Tab-Close Check
 
-The background service worker must persist a `pendingDeployments` map to `chrome.storage.local` (key: `pendingDeployments`). This map is keyed by tab ID (as a string) and stores enough metadata to reconstruct a history entry:
+On `chrome.tabs.onRemoved`, the background must:
 
-- deployment type
-- name
-- environment
-- server
-- URL
-- start time
-
-When a deployment transitions to `in_progress`, the background must add it to the pending map and persist it. When a deployment reaches any final state, the background must remove it from the pending map and persist the map.
+1. Read `deployments` from `chrome.storage.local`.
+2. Find entries with `status === in_progress` whose `tabId` matches the removed tab.
+3. Skip any entry where a non-`unknown`, non-`in_progress` entry already exists for the same URL (race-condition guard: the content script may have sent a final status just before the tab was closed).
+4. For each remaining entry, transition it to `unknown` in place (update `status`, `timestamp`, clear `tabId` and `endTime`).
+5. Enforce history limits.
+6. **No notification is sent.** The user intentionally closed the tab; no interruption occurred.
 
 #### Startup Check
 
 On `chrome.runtime.onStartup` (fires once per browser profile start, not on service worker restarts), the background must:
 
-1. Read `pendingDeployments`, `history`, and `preferences` from `chrome.storage.local` in a single storage call.
-2. For each pending entry, create a history record with status `unknown` and the current timestamp as completion time.
-3. Send a browser notification for each such entry (subject to the `notifyError` preference).
-4. Enforce history limits after all entries are added.
-5. Clear `pendingDeployments` from storage.
+1. Read `deployments` and `preferences` from `chrome.storage.local`.
+2. For each entry with `status === in_progress`, skip it if a non-`unknown`, non-`in_progress` entry already exists for the same URL (race-condition guard: a restored-session tab may have reported its outcome before this callback fires).
+3. For each remaining `in_progress` entry, transition it to `unknown` in place (update `status`, `timestamp`, clear `tabId` and `endTime`).
+4. Enforce history limits.
+5. Send a browser notification for each newly-unknown entry (subject to the `notifyError` preference). Because `onStartup` fires on browser open — not during close — sending immediately is correct.
 
 #### Resolving an Unknown Entry
 
-When the user opens a deployment URL that has an `unknown` history entry:
+When the user opens a deployment URL that has an `unknown` entry:
 
 - The content script detects the current state and sends a `deploymentUpdate` message.
-- The background treats the `unknown` entry as absent for the purpose of revisit suppression and `firstMessageIsFinal` logic.
-- When a real final state is received for that URL, the `unknown` entry is removed from history and replaced with the actual result.
+- If the first message is `in_progress`, the `unknown` entry is removed immediately so only the active InProgress card is shown for that URL.
+- When a real final state is received, the `unknown` entry is removed and replaced with the actual result. Any OS notification for the `unknown` entry is cleared via `chrome.notifications.clear`.
 
 ---
 
@@ -331,15 +343,14 @@ Responsibilities:
 
 Responsibilities:
 
-- Track `in_progress` vs final states per tab
-- Persist active deployment state to `chrome.storage.session` to survive service worker restarts within the browser session
-- Persist in-progress deployments to `chrome.storage.local` (`pendingDeployments`) so interrupted deployments survive browser restarts
-- On `chrome.runtime.onStartup`, detect interrupted deployments and add `unknown` history entries with notifications
-- Detect transitions from `in_progress` to a final state
+- Track all deployment state (active and concluded) in a single `deployments` array persisted to `chrome.storage.local`
+- Update entries in place as status transitions occur (e.g. `in_progress` → `success`)
+- On `chrome.tabs.onRemoved`, immediately transition any `in_progress` entry for the closed tab to `unknown` (no notification)
+- On `chrome.runtime.onStartup`, transition any remaining `in_progress` entries to `unknown` and send notifications
 - Apply user preferences before triggering any output
-- Generate browser notifications for final states
+- Generate browser notifications for final states; clear `unknown` notifications when a real status replaces them
 - Update badge indicators
-- Maintain deployment history in `chrome.storage.local`
+- Enforce history limits (count or age) on concluded entries after each update
 - Handle notification click events by focusing the originating tab via `chrome.tabs.update`; for `unknown` entries, open the extension popup instead
 
 #### 8.1.3 Popup UI
@@ -363,7 +374,7 @@ The extension requires:
 - `notifications` — for browser notifications
 - `tabs` — for tab focus and querying
 - `scripting` — for dynamic script injection
-- `storage` — for `chrome.storage.local` (preferences, history) and `chrome.storage.session` (active deployment state)
+- `storage` — for `chrome.storage.local` (all deployment state and preferences)
 - Host permissions for Service Center and LifeTime domains
 
 ---
@@ -421,9 +432,12 @@ Mapped to: `intervention`.
 
 ### 9.6 Unknown (Outcome Not Observed)
 
-Assigned by the background service worker at browser startup when a deployment was `in_progress` at the time the browser was closed. The page was never re-polled, so the actual outcome is not known.
+Assigned by the background service worker when a deployment was `in_progress` and the content script can no longer report back. Two triggers:
 
-Not detected by the content script — synthesised internally on `chrome.runtime.onStartup`.
+- **Tab closed** (`chrome.tabs.onRemoved`): immediate transition, no notification.
+- **Browser startup** (`chrome.runtime.onStartup`): transition with notification (the browser was closed while tracking was active).
+
+Not detected by the content script — synthesised internally by the background.
 
 Mapped to: `unknown`.
 

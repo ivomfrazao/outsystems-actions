@@ -52,7 +52,7 @@ chrome.storage.local.get(
   [STORAGE_KEYS.deployments, STORAGE_KEYS.preferences, 'history', 'pendingDeployments'],
   (result: Record<string, unknown>) => {
     if (result[STORAGE_KEYS.preferences]) {
-      userPreferences = result[STORAGE_KEYS.preferences] as UserPreferences;
+      userPreferences = { ...userPreferences, ...result[STORAGE_KEYS.preferences] as UserPreferences };
     }
 
     if (result[STORAGE_KEYS.deployments]) {

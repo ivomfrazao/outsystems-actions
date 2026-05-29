@@ -19,7 +19,7 @@ const PREF_KEY_MAP = {
   [DeploymentStatus.Warning]:      'notifyWarning',
   [DeploymentStatus.Error]:        'notifyError',
   [DeploymentStatus.Intervention]: 'notifyIntervention',
-  [DeploymentStatus.Unknown]:      'notifyError',
+  [DeploymentStatus.Unknown]:      'notifyUnknown',
 } as const satisfies Record<FinalStatus, keyof UserPreferences>;
 
 const BADGE_CONFIG = {
@@ -39,6 +39,7 @@ let userPreferences: UserPreferences = {
   notifyWarning:      true,
   notifyError:        true,
   notifyIntervention: true,
+  notifyUnknown:      true,
   animationsEnabled:  true,
   historyLimitType:   'count',
   historyMaxCount:    5,

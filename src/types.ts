@@ -52,6 +52,7 @@ export interface UserPreferences {
   notifyWarning:      boolean;
   notifyError:        boolean;
   notifyIntervention: boolean;
+  notifyUnknown:      boolean;
   animationsEnabled:  boolean;
   historyLimitType:   'count' | 'days';
   historyMaxCount:    number;

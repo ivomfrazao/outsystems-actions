@@ -246,7 +246,7 @@ function renderDeployments(allDeployments: DeploymentEntry[]): void {
 
 // ── Preferences ──────────────────────────────────────────────────────────────
 
-const BOOL_PREF_IDS = ['notifySuccess', 'notifyWarning', 'notifyError', 'notifyIntervention', 'animationsEnabled'] as const;
+const BOOL_PREF_IDS = ['notifySuccess', 'notifyWarning', 'notifyError', 'notifyIntervention', 'notifyUnknown', 'animationsEnabled'] as const;
 
 function getCheckbox(id: string): HTMLInputElement | null {
   return document.getElementById(id) as HTMLInputElement | null;
@@ -307,6 +307,7 @@ function updatePreferences(): void {
     notifyWarning:      getCheckbox('notifyWarning')?.checked      ?? true,
     notifyError:        getCheckbox('notifyError')?.checked        ?? true,
     notifyIntervention: getCheckbox('notifyIntervention')?.checked ?? true,
+    notifyUnknown:      getCheckbox('notifyUnknown')?.checked      ?? true,
     animationsEnabled:  getCheckbox('animationsEnabled')?.checked  ?? true,
     historyLimitType:   limitType,
     historyMaxCount:    parseInt(getNumberInput('historyMaxCount')?.value ?? '5', 10) || 5,

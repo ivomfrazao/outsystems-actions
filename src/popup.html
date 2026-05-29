@@ -97,7 +97,16 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--c-btn-border) transparent;
     }
+    .panels::-webkit-scrollbar { width: 6px; }
+    .panels::-webkit-scrollbar-track { background: transparent; }
+    .panels::-webkit-scrollbar-thumb {
+      background: var(--c-btn-border);
+      border-radius: 3px;
+    }
+    .panels::-webkit-scrollbar-thumb:hover { background: var(--c-text-muted); }
 
     .panel {
       padding: 10px;

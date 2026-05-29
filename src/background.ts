@@ -354,7 +354,28 @@ function handleDeploymentUpdate(
 // chrome.tabs.query({}) (without a url pattern) is required here because
 // match patterns don't support query strings, so we filter manually with
 // sameDeploymentUrl instead.
-function openDeploymentUrl(url: string): void {
+// When tabId is provided (in_progress entries), we attempt to focus it directly
+// instead of relying on URL matching, which can fail if the stored URL differs
+// from the live tab URL.
+function openDeploymentUrl(url: string, tabId?: number): void {
+  if (tabId !== undefined) {
+    chrome.tabs.get(tabId, (tab) => {
+      if (!chrome.runtime.lastError && tab) {
+        chrome.tabs.update(tabId, { active: true });
+        if (tab.windowId !== undefined) {
+          chrome.windows.update(tab.windowId, { focused: true });
+        }
+        return;
+      }
+      // Tab no longer exists — fall back to URL matching.
+      openByUrl(url);
+    });
+    return;
+  }
+  openByUrl(url);
+}
+
+function openByUrl(url: string): void {
   chrome.tabs.query({}, (tabs) => {
     const tab = tabs.find(t => t.url !== undefined && sameDeploymentUrl(t.url, url));
     if (tab?.id !== undefined) {
@@ -403,8 +424,8 @@ chrome.runtime.onMessage.addListener((
       clearBadge();
       break;
     case 'openDeployment': {
-      const { url } = message.payload;
-      openDeploymentUrl(url);
+      const { url, tabId } = message.payload;
+      openDeploymentUrl(url, tabId);
       break;
     }
     case 'deleteDeployment': {

@@ -88,7 +88,7 @@ export interface UpdatePreferencesMessage {
 
 export interface OpenDeploymentMessage {
   type: 'openDeployment';
-  payload: { url: string };
+  payload: { url: string; tabId?: number };
 }
 
 export interface DeleteDeploymentMessage {

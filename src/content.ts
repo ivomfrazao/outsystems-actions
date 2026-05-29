@@ -83,6 +83,18 @@ function extractMetadata(): void {
     deploymentName = match?.[1]?.trim() ?? null;
   }
 
+  // For LifeTime deployments the name is not in the title; extract the first
+  // application name from the deployment plan list. IDs end with wtApplicationName.
+  if (!deploymentName && deploymentType === DType.LifeTimeDeployment) {
+    const appEls = Array.from(document.querySelectorAll('[id$="wtApplicationName"]'));
+    const appNames = appEls.map(el => el.textContent?.trim()).filter(Boolean) as string[];
+    if (appNames.length > 0) {
+      deploymentName = appNames.length > 1
+        ? `${appNames[0]} +${appNames.length - 1}`
+        : appNames[0];
+    }
+  }
+
   // Server name from the sidebar's server info block — more stable than hostname.
   // Targets: .sc-content-left .margin-top-base > div:first-child
   serverName = document.querySelector('.sc-content-left .margin-top-base > div:first-child')

@@ -14,6 +14,8 @@ A Chromium extension that monitors OutSystems Service Center and LifeTime and no
 - Card enter/leave animations (can be disabled in Settings)
 - Swipe or click the bottom nav to slide between Deployments and Settings; click animation mirrors the swipe motion
 - User-configurable notification preferences — master "All Notifications" toggle plus per-outcome filters (success, warning, error, intervention, unknown)
+- Cards show a type label in the meta row (`Deploy` / `Solution`) so you can distinguish LifeTime deployments from Solution publishes at a glance
+- LifeTime cards show the deployed application name(s) extracted from the deployment plan (e.g. `MyApp +2`); when no names are available the card falls back to `Deploy`
 
 ## Installation
 

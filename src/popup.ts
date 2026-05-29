@@ -3,7 +3,7 @@ import type {
   PopupResponseMessage,
   UserPreferences,
 } from './types';
-import { DeploymentStatus } from './types';
+import { DeploymentStatus, DeploymentType } from './types';
 
 type TagStyle = 'in-progress' | 'success' | 'warning' | 'error' | 'intervention' | 'unknown';
 
@@ -123,10 +123,16 @@ function applyAnimations(enabled: boolean): void {
 // Tracks which card IDs are currently in the DOM so we can diff on each render.
 const renderedCardIds = new Set<string>();
 
+const TYPE_LABELS: Partial<Record<string, string>> = {
+  [DeploymentType.LifeTimeDeployment]: 'Deploy',
+  [DeploymentType.Solution]:           'Solution',
+};
+
 function buildCard(
   id: string,
   name: string | null,
   status: string,
+  deploymentType: string | null,
   environment: string | null,
   server: string | null,
   timestamp: number,
@@ -134,8 +140,10 @@ function buildCard(
   isHistory: boolean,
   startTime: string | null,
   endTime: string | null,
+  tabId?: number,
 ): HTMLElement {
   const t = TAG_LABELS[status];
+  const typeLabel = deploymentType ? (TYPE_LABELS[deploymentType] ?? null) : null;
 
   const card = document.createElement('div');
   card.className = 'card';
@@ -153,7 +161,7 @@ function buildCard(
 
   const nameEl = document.createElement('span');
   nameEl.className = 'card__name';
-  nameEl.textContent = name ?? 'Unknown';
+  nameEl.textContent = name ?? typeLabel ?? 'Unknown';
   top.appendChild(nameEl);
 
   if (t) {
@@ -190,8 +198,8 @@ function buildCard(
     top.appendChild(del);
   }
 
-  // Meta row: server · environment (omit nulls)
-  const metaParts = [server, environment].filter((p): p is string => p != null && p !== '');
+  // Meta row: type label · server · environment (omit nulls)
+  const metaParts = [typeLabel, server, environment].filter((p): p is string => p != null && p !== '');
   const meta = metaParts.length > 0 ? document.createElement('div') : null;
   if (meta) {
     meta.className = 'card__meta';
@@ -223,7 +231,7 @@ function buildCard(
   // Clicking anywhere on the card opens the deployment, reusing the existing
   // browser tab when possible (handled by the background service worker).
   card.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ type: 'openDeployment', payload: { url } });
+    chrome.runtime.sendMessage({ type: 'openDeployment', payload: { url, tabId } });
   });
 
   return card;
@@ -251,11 +259,11 @@ function renderDeployments(allDeployments: DeploymentEntry[]): void {
   const desired: Array<{ id: string; build: () => HTMLElement }> = [
     ...inProgress.map(item => ({
       id: item.id,
-      build: () => buildCard(item.id, item.name, DeploymentStatus.InProgress, item.environment, item.server, item.timestamp, item.url, false, item.startTime, null),
+      build: () => buildCard(item.id, item.name, DeploymentStatus.InProgress, item.type, item.environment, item.server, item.timestamp, item.url, false, item.startTime, null, item.tabId),
     })),
     ...history.map(item => ({
       id: item.id,
-      build: () => buildCard(item.id, item.name, item.status, item.environment, item.server, item.timestamp, item.url, true, item.startTime, item.endTime),
+      build: () => buildCard(item.id, item.name, item.status, item.type, item.environment, item.server, item.timestamp, item.url, true, item.startTime, item.endTime),
     })),
   ];
 

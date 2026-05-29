@@ -104,6 +104,8 @@ LifeTime deployment pages use URL paths with varying capitalisation (`/LifeTime/
 
 The success state is signalled by the text `"Deployment finished with success"` inside the finish-box element. The environment name must be extracted from the `<span class="TitleIdentifier">` element in the page heading (the page title format `"Deployment to <Env>"` does not use the `" - "` separator used by Service Center pages).
 
+The deployment name must be extracted from elements whose `id` ends with `wtApplicationName` in the deployment plan list. If one application is listed, the name is taken verbatim. If multiple applications are listed, the name is formatted as `"<first app> +<N>"` where N is the count of additional apps. If no application names can be found, the name field is left null.
+
 #### 3.1.3 Multi-Tab Behaviour
 
 Each browser tab must be treated independently.
@@ -190,9 +192,11 @@ Each entry must include:
 - Start time and end time (extracted from `MessagesTable` when available)
 - URL to the deployment result page
 
+When the deployment name is unavailable, the card displays a type-based fallback label: `"Deploy"` for LifeTime deployments and `"Solution"` for Solution publishes. eSpace publishes always have a name extracted from the page.
+
 Cards display metadata on two lines:
 
-- **Line 1** — server and environment (omitted if neither is available).
+- **Line 1** — type label · server · environment. The type label is `"Deploy"` for LifeTime deployments and `"Solution"` for Solution publishes; it is omitted for eSpace publishes. Server and environment are omitted if unavailable.
 - **Line 2** — date derived from the entry's timestamp, followed by the time range: `D Mon · HH:MM:SS → HH:MM:SS` when both times are known, `D Mon · HH:MM:SS` when only the start time is available, or `D Mon · HH:MM:SS` (locale-formatted completion time) as a fallback.
 
 Start and end times are sourced in order of preference:

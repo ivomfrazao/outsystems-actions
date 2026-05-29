@@ -104,7 +104,7 @@ LifeTime deployment pages use URL paths with varying capitalisation (`/LifeTime/
 
 The success state is signalled by the text `"Deployment finished with success"` inside the finish-box element. The environment name must be extracted from the `<span class="TitleIdentifier">` element in the page heading (the page title format `"Deployment to <Env>"` does not use the `" - "` separator used by Service Center pages).
 
-The deployment name must be extracted from elements whose `id` ends with `wtApplicationName` in the deployment plan list. If one application is listed, the name is taken verbatim. If multiple applications are listed, the name is formatted as `"<first app> +<N>"` where N is the count of additional apps. If no application names can be found, the name field is left null.
+The deployment name must be extracted from the deployed-applications list (`wtListApplications`). Each deployed-app row contains an element whose `id` includes `_wtListApplications_ctl` and ends with `_wtOperation`; the app name lives in a `span[style*="font-size: 13"]` within the same enclosing `<table>`. (The separate `wtListOutdated` widget lists republished dependents and must not be used as a source.) If one application is listed, the name is taken verbatim. If multiple applications are listed, the name is formatted as `"<first app> +<N>"` where N is the count of additional apps. If no application names can be found, the name field is left null.
 
 #### 3.1.3 Multi-Tab Behaviour
 

@@ -83,11 +83,16 @@ function extractMetadata(): void {
     deploymentName = match?.[1]?.trim() ?? null;
   }
 
-  // For LifeTime deployments the name is not in the title; extract the first
-  // application name from the deployment plan list. IDs end with wtApplicationName.
+  // For LifeTime deployments the name is not in the title; extract app names
+  // from the deployment plan list. Each deployed-app row has a stable
+  // [id*="_wtListApplications_ctl"][id$="_wtOperation"] element; the app name
+  // is in a `span[style*="font-size: 13"]` within the same enclosing table.
+  // (The dependents section uses [id$="wtApplicationName"] — a different widget.)
   if (!deploymentName && deploymentType === DType.LifeTimeDeployment) {
-    const appEls = Array.from(document.querySelectorAll('[id$="wtApplicationName"]'));
-    const appNames = appEls.map(el => el.textContent?.trim()).filter(Boolean) as string[];
+    const opEls = Array.from(document.querySelectorAll('[id*="_wtListApplications_ctl"][id$="_wtOperation"]'));
+    const appNames = opEls
+      .map(el => el.closest('table')?.querySelector<HTMLElement>('span[style*="font-size: 13"]')?.textContent?.trim() ?? null)
+      .filter(Boolean) as string[];
     if (appNames.length > 0) {
       deploymentName = appNames.length > 1
         ? `${appNames[0]} +${appNames.length - 1}`

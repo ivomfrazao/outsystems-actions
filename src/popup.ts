@@ -66,6 +66,23 @@ function initNav(): void {
   });
 }
 
+// ── Settings tabs ────────────────────────────────────────────────────────────
+
+function showSettingsTab(tab: string): void {
+  document.querySelectorAll<HTMLElement>('[data-settings-pane]').forEach(pane => {
+    pane.classList.toggle('settings-pane--hidden', pane.dataset['settingsPane'] !== tab);
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-settings-tab]').forEach(btn => {
+    btn.classList.toggle('settings-tab--active', btn.dataset['settingsTab'] === tab);
+  });
+}
+
+function initSettingsTabs(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-settings-tab]').forEach(btn => {
+    btn.addEventListener('click', () => showSettingsTab(btn.dataset['settingsTab'] ?? ''));
+  });
+}
+
 // ── Animations ───────────────────────────────────────────────────────────────
 
 // Toggling .popup--animated on <body> gates all CSS card animations. When the
@@ -330,6 +347,7 @@ function refresh(): void {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initNav();
+  initSettingsTabs();
 
   chrome.runtime.sendMessage({ type: 'clearBadge' });
   chrome.runtime.sendMessage({ type: 'getPreferences' }, (response: PopupResponseMessage) => {

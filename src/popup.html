@@ -375,6 +375,31 @@
       outline-offset: 1px;
     }
 
+    /* ── Settings tab bar ── */
+    [data-panel="settings"] { padding: 0; gap: 0; }
+    .settings-tabs {
+      display: flex;
+      background: var(--c-card-bg);
+      border-bottom: 1px solid var(--c-card-border);
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .settings-tab {
+      flex: 1;
+      padding: 9px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--c-text-secondary);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .settings-tab:hover:not(.settings-tab--active) { color: var(--c-text-primary); }
+    .settings-tab--active { color: var(--c-nav-active); border-bottom-color: var(--c-nav-active); }
+    .settings-pane { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .settings-pane--hidden { display: none; }
+
     /* ── Bottom navigation bar ── */
     .nav {
       display: flex;
@@ -429,90 +454,93 @@
     <!-- Settings panel -->
     <section class="panel panel--hidden" data-panel="settings">
 
-      <div class="section">
-        <div class="section__header">
-          <span class="section__title">Appearance</span>
-        </div>
-        <div class="section__body">
-          <div class="pref">
-            <span class="pref__label">Dark Mode</span>
-            <div class="seg" id="darkModeSeg">
-              <button class="seg__btn" data-value="off">Light</button>
-              <button class="seg__btn seg__btn--active" data-value="system">System</button>
-              <button class="seg__btn" data-value="on">Dark</button>
+      <div class="settings-tabs">
+        <button class="settings-tab settings-tab--active" data-settings-tab="notifications">Notifications</button>
+        <button class="settings-tab" data-settings-tab="history">History</button>
+        <button class="settings-tab" data-settings-tab="appearance">Appearance</button>
+      </div>
+
+      <div class="settings-pane settings-pane--hidden" data-settings-pane="appearance">
+        <div class="section">
+          <div class="section__body">
+            <div class="pref">
+              <span class="pref__label">Dark Mode</span>
+              <div class="seg" id="darkModeSeg">
+                <button class="seg__btn" data-value="off">Light</button>
+                <button class="seg__btn seg__btn--active" data-value="system">System</button>
+                <button class="seg__btn" data-value="on">Dark</button>
+              </div>
+            </div>
+            <div class="pref">
+              <span class="pref__label">Animations</span>
+              <label class="toggle">
+                <input type="checkbox" id="animationsEnabled">
+                <span class="toggle__track"></span>
+              </label>
             </div>
           </div>
-          <div class="pref">
-            <span class="pref__label">Animations</span>
-            <label class="toggle">
-              <input type="checkbox" id="animationsEnabled">
-              <span class="toggle__track"></span>
-            </label>
+        </div>
+      </div>
+
+      <div class="settings-pane" data-settings-pane="notifications">
+        <div class="section">
+          <div class="section__body">
+            <div class="pref">
+              <span class="pref__label">Success</span>
+              <label class="toggle">
+                <input type="checkbox" id="notifySuccess">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
+            <div class="pref">
+              <span class="pref__label">Warning</span>
+              <label class="toggle">
+                <input type="checkbox" id="notifyWarning">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
+            <div class="pref">
+              <span class="pref__label">Error</span>
+              <label class="toggle">
+                <input type="checkbox" id="notifyError">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
+            <div class="pref">
+              <span class="pref__label">Intervention</span>
+              <label class="toggle">
+                <input type="checkbox" id="notifyIntervention">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
+            <div class="pref">
+              <span class="pref__label">Unknown</span>
+              <label class="toggle">
+                <input type="checkbox" id="notifyUnknown">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="section">
-        <div class="section__header">
-          <span class="section__title">&#128276; Notifications</span>
-        </div>
-        <div class="section__body">
-          <div class="pref">
-            <span class="pref__label">Success</span>
-            <label class="toggle">
-              <input type="checkbox" id="notifySuccess">
-              <span class="toggle__track"></span>
-            </label>
-          </div>
-          <div class="pref">
-            <span class="pref__label">Warning</span>
-            <label class="toggle">
-              <input type="checkbox" id="notifyWarning">
-              <span class="toggle__track"></span>
-            </label>
-          </div>
-          <div class="pref">
-            <span class="pref__label">Error</span>
-            <label class="toggle">
-              <input type="checkbox" id="notifyError">
-              <span class="toggle__track"></span>
-            </label>
-          </div>
-          <div class="pref">
-            <span class="pref__label">Intervention</span>
-            <label class="toggle">
-              <input type="checkbox" id="notifyIntervention">
-              <span class="toggle__track"></span>
-            </label>
-          </div>
-          <div class="pref">
-            <span class="pref__label">Unknown</span>
-            <label class="toggle">
-              <input type="checkbox" id="notifyUnknown">
-              <span class="toggle__track"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section__header">
-          <span class="section__title">&#128337; History</span>
-        </div>
-        <div class="section__body">
-          <div class="pref">
-            <label class="pref__radio-label">
-              <input type="radio" name="historyLimitType" value="count" id="limitByCount" checked>
-              <span class="pref__label">Max deployments</span>
-            </label>
-            <input type="number" id="historyMaxCount" min="1" max="100" value="5" class="pref__input">
-          </div>
-          <div class="pref">
-            <label class="pref__radio-label">
-              <input type="radio" name="historyLimitType" value="days" id="limitByDays">
-              <span class="pref__label">Max days</span>
-            </label>
-            <input type="number" id="historyMaxDays" min="1" max="365" value="1" class="pref__input">
+      <div class="settings-pane settings-pane--hidden" data-settings-pane="history">
+        <div class="section">
+          <div class="section__body">
+            <div class="pref">
+              <label class="pref__radio-label">
+                <input type="radio" name="historyLimitType" value="count" id="limitByCount" checked>
+                <span class="pref__label">Max deployments</span>
+              </label>
+              <input type="number" id="historyMaxCount" min="1" max="100" value="5" class="pref__input">
+            </div>
+            <div class="pref">
+              <label class="pref__radio-label">
+                <input type="radio" name="historyLimitType" value="days" id="limitByDays">
+                <span class="pref__label">Max days</span>
+              </label>
+              <input type="number" id="historyMaxDays" min="1" max="365" value="1" class="pref__input">
+            </div>
           </div>
         </div>
       </div>

@@ -190,7 +190,10 @@ Each entry must include:
 - Start time and end time (extracted from `MessagesTable` when available)
 - URL to the deployment result page
 
-Cards display start and end times when available (`HH:MM:SS → HH:MM:SS`), start time only when end time is absent, or the browser-local completion time as a fallback.
+Cards display metadata on two lines:
+
+- **Line 1** — server and environment (omitted if neither is available).
+- **Line 2** — date derived from the entry's timestamp, followed by the time range: `D Mon · HH:MM:SS → HH:MM:SS` when both times are known, `D Mon · HH:MM:SS` when only the start time is available, or `D Mon · HH:MM:SS` (locale-formatted completion time) as a fallback.
 
 Start and end times are sourced in order of preference:
 
@@ -296,7 +299,11 @@ Default: **System**. The selected mode persists across sessions, stored as `'on'
 
 ### 7.1 Notification Filters
 
-Controls which **final** outcomes trigger browser notifications:
+A global **All Notifications** master toggle silences all browser notifications in one action. When disabled, no notification fires regardless of the per-outcome settings below; when re-enabled, the individual settings are restored exactly as they were — the master toggle does not modify them.
+
+The individual per-outcome toggles are visually disabled (dimmed, non-interactive) while the master toggle is off, so the user can see their saved configuration at a glance without being able to accidentally change it.
+
+Controls which **final** outcomes trigger browser notifications (subject to the master toggle):
 
 - success
 - warning
@@ -307,10 +314,12 @@ Controls which **final** outcomes trigger browser notifications:
 
 ### 7.2 Animations
 
-A global **Animations** toggle controls whether card enter/leave animations play in the popup.
+A global **Animations** toggle controls whether animations play in the popup.
 
-- When enabled, cards animate in when they appear and animate out when they are removed.
-- When disabled, cards appear and disappear instantly with no transition.
+- When enabled:
+  - Cards animate in when they appear and animate out when they are removed.
+  - Navigating between the Deployments and Settings panels uses a smooth horizontal scroll (identical to the motion produced by a touch swipe).
+- When disabled, all elements appear and disappear instantly with no transition.
 - The toggle must be respected everywhere animations could occur; there must be no animation bypass.
 - Default: enabled.
 
@@ -365,6 +374,7 @@ Responsibilities:
 - Provide a Dark Mode segmented control (Light / System / Dark)
 - Provide an Animations toggle
 - Provide history limit settings (mode: max count or max days)
+- The Deployments and Settings panels sit side-by-side in a horizontal scroll container; the bottom nav bar both indicates and controls the active panel — clicking a nav item scrolls to that panel (smooth when animations are enabled, instant when not); touch users can also swipe directly between panels
 - Clear badge when opened
 
 ### 8.2 Permissions

@@ -51,10 +51,17 @@ function initTheme(): void {
 
 // ── Tab navigation ───────────────────────────────────────────────────────────
 
+const PANEL_ORDER = ['deployments', 'settings'] as const;
+let currentPanelIndex = 0;
+
 function showTab(tab: string): void {
-  document.querySelectorAll<HTMLElement>('[data-panel]').forEach(panel => {
-    panel.classList.toggle('panel--hidden', panel.dataset['panel'] !== tab);
-  });
+  const idx = PANEL_ORDER.indexOf(tab as typeof PANEL_ORDER[number]);
+  if (idx === -1) return;
+  currentPanelIndex = idx;
+
+  const track = document.querySelector<HTMLElement>('.panels-track');
+  if (track) track.style.transform = idx > 0 ? `translateX(${-idx * 360}px)` : '';
+
   document.querySelectorAll<HTMLElement>('[data-tab]').forEach(btn => {
     btn.classList.toggle('nav__item--active', btn.dataset['tab'] === tab);
   });
@@ -64,6 +71,23 @@ function initNav(): void {
   document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => showTab(btn.dataset['tab'] ?? ''));
   });
+}
+
+// ── Touch swipe between panels ────────────────────────────────────────────────
+
+function initSwipe(): void {
+  const container = document.querySelector<HTMLElement>('.panels');
+  if (!container) return;
+  let startX = 0;
+  container.addEventListener('touchstart', (e: TouchEvent) => {
+    startX = e.touches[0].clientX;
+  }, { passive: true });
+  container.addEventListener('touchend', (e: TouchEvent) => {
+    const delta = e.changedTouches[0].clientX - startX;
+    if (Math.abs(delta) < container.clientWidth * 0.3) return;
+    if (delta < 0 && currentPanelIndex < PANEL_ORDER.length - 1) showTab(PANEL_ORDER[currentPanelIndex + 1]);
+    else if (delta > 0 && currentPanelIndex > 0) showTab(PANEL_ORDER[currentPanelIndex - 1]);
+  }, { passive: true });
 }
 
 // ── Settings tabs ────────────────────────────────────────────────────────────
@@ -166,22 +190,32 @@ function buildCard(
     top.appendChild(del);
   }
 
-  // Meta row: server · environment · time (omit nulls)
+  // Meta row: server · environment (omit nulls)
   const metaParts = [server, environment].filter((p): p is string => p != null && p !== '');
-  if (startTime && endTime) {
-    metaParts.push(`${startTime} → ${endTime}`);
-  } else if (startTime) {
-    metaParts.push(startTime);
-  } else {
-    metaParts.push(new Date(timestamp).toLocaleTimeString());
+  const meta = metaParts.length > 0 ? document.createElement('div') : null;
+  if (meta) {
+    meta.className = 'card__meta';
+    meta.textContent = metaParts.join(' · ');
   }
 
-  const meta = document.createElement('div');
-  meta.className = 'card__meta';
-  meta.textContent = metaParts.join(' · ');
+  // Time row: date + start → end times on a second line
+  const d = new Date(timestamp);
+  const dateStr = d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  let timeContent: string;
+  if (startTime && endTime) {
+    timeContent = `${dateStr} · ${startTime} → ${endTime}`;
+  } else if (startTime) {
+    timeContent = `${dateStr} · ${startTime}`;
+  } else {
+    timeContent = `${dateStr} · ${d.toLocaleTimeString()}`;
+  }
+  const time = document.createElement('div');
+  time.className = 'card__time';
+  time.textContent = timeContent;
 
   body.appendChild(top);
-  body.appendChild(meta);
+  if (meta) body.appendChild(meta);
+  body.appendChild(time);
 
   card.appendChild(accent);
   card.appendChild(body);
@@ -263,7 +297,8 @@ function renderDeployments(allDeployments: DeploymentEntry[]): void {
 
 // ── Preferences ──────────────────────────────────────────────────────────────
 
-const BOOL_PREF_IDS = ['notifySuccess', 'notifyWarning', 'notifyError', 'notifyIntervention', 'notifyUnknown', 'animationsEnabled'] as const;
+const NOTIFY_SUB_PREF_IDS = ['notifySuccess', 'notifyWarning', 'notifyError', 'notifyIntervention', 'notifyUnknown'] as const;
+const BOOL_PREF_IDS = ['notificationsEnabled', ...NOTIFY_SUB_PREF_IDS, 'animationsEnabled'] as const;
 
 function getCheckbox(id: string): HTMLInputElement | null {
   return document.getElementById(id) as HTMLInputElement | null;
@@ -280,6 +315,15 @@ function updateHistoryInputStates(type: 'count' | 'days'): void {
   if (daysInput)  daysInput.disabled  = type !== 'days';
 }
 
+function applyNotificationsEnabled(enabled: boolean): void {
+  for (const id of NOTIFY_SUB_PREF_IDS) {
+    const el = getCheckbox(id);
+    if (!el) continue;
+    el.disabled = !enabled;
+    el.closest<HTMLElement>('.pref')?.classList.toggle('pref--disabled', !enabled);
+  }
+}
+
 function setPreferences(prefs: UserPreferences): void {
   for (const id of BOOL_PREF_IDS) {
     const el = getCheckbox(id);
@@ -288,6 +332,10 @@ function setPreferences(prefs: UserPreferences): void {
       el.addEventListener('change', updatePreferences);
     }
   }
+
+  applyNotificationsEnabled(prefs.notificationsEnabled);
+  const masterEl = getCheckbox('notificationsEnabled');
+  if (masterEl) masterEl.addEventListener('change', () => applyNotificationsEnabled(masterEl.checked));
 
   applyAnimations(prefs.animationsEnabled);
 
@@ -320,15 +368,16 @@ function setPreferences(prefs: UserPreferences): void {
 function updatePreferences(): void {
   const limitType = (document.querySelector<HTMLInputElement>('input[name="historyLimitType"]:checked')?.value ?? 'count') as 'count' | 'days';
   const prefs: UserPreferences = {
-    notifySuccess:      getCheckbox('notifySuccess')?.checked      ?? true,
-    notifyWarning:      getCheckbox('notifyWarning')?.checked      ?? true,
-    notifyError:        getCheckbox('notifyError')?.checked        ?? true,
-    notifyIntervention: getCheckbox('notifyIntervention')?.checked ?? true,
-    notifyUnknown:      getCheckbox('notifyUnknown')?.checked      ?? true,
-    animationsEnabled:  getCheckbox('animationsEnabled')?.checked  ?? true,
-    historyLimitType:   limitType,
-    historyMaxCount:    parseInt(getNumberInput('historyMaxCount')?.value ?? '5', 10) || 5,
-    historyMaxDays:     parseInt(getNumberInput('historyMaxDays')?.value  ?? '1', 10) || 1,
+    notificationsEnabled: getCheckbox('notificationsEnabled')?.checked ?? true,
+    notifySuccess:        getCheckbox('notifySuccess')?.checked        ?? true,
+    notifyWarning:        getCheckbox('notifyWarning')?.checked        ?? true,
+    notifyError:          getCheckbox('notifyError')?.checked          ?? true,
+    notifyIntervention:   getCheckbox('notifyIntervention')?.checked   ?? true,
+    notifyUnknown:        getCheckbox('notifyUnknown')?.checked        ?? true,
+    animationsEnabled:    getCheckbox('animationsEnabled')?.checked    ?? true,
+    historyLimitType:     limitType,
+    historyMaxCount:      parseInt(getNumberInput('historyMaxCount')?.value ?? '5', 10) || 5,
+    historyMaxDays:       parseInt(getNumberInput('historyMaxDays')?.value  ?? '1', 10) || 1,
   };
   applyAnimations(prefs.animationsEnabled);
   chrome.runtime.sendMessage({ type: 'updatePreferences', payload: prefs });
@@ -347,6 +396,7 @@ function refresh(): void {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initNav();
+  initSwipe();
   initSettingsTabs();
 
   chrome.runtime.sendMessage({ type: 'clearBadge' });

@@ -35,15 +35,16 @@ const BADGE_CONFIG = {
 let deployments: DeploymentEntry[] = [];
 
 let userPreferences: UserPreferences = {
-  notifySuccess:      true,
-  notifyWarning:      true,
-  notifyError:        true,
-  notifyIntervention: true,
-  notifyUnknown:      true,
-  animationsEnabled:  true,
-  historyLimitType:   'count',
-  historyMaxCount:    5,
-  historyMaxDays:     1,
+  notificationsEnabled: true,
+  notifySuccess:        true,
+  notifyWarning:        true,
+  notifyError:          true,
+  notifyIntervention:   true,
+  notifyUnknown:        true,
+  animationsEnabled:    true,
+  historyLimitType:     'count',
+  historyMaxCount:      5,
+  historyMaxDays:       1,
 };
 
 // Load persisted state. Also handles one-time migration from the old split
@@ -193,6 +194,7 @@ const STATUS_LABEL: Record<FinalStatus, string> = {
 };
 
 function createNotification(entry: DeploymentEntry): void {
+  if (!userPreferences.notificationsEnabled) return;
   const status = entry.status as FinalStatus;
   if (!userPreferences[PREF_KEY_MAP[status]]) return;
   const typeLabel   = TYPE_LABEL[entry.type]   ?? 'Deployment';

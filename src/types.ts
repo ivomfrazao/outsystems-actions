@@ -48,15 +48,16 @@ export interface DeploymentEntry {
 }
 
 export interface UserPreferences {
-  notifySuccess:      boolean;
-  notifyWarning:      boolean;
-  notifyError:        boolean;
-  notifyIntervention: boolean;
-  notifyUnknown:      boolean;
-  animationsEnabled:  boolean;
-  historyLimitType:   'count' | 'days';
-  historyMaxCount:    number;
-  historyMaxDays:     number;
+  notificationsEnabled: boolean;
+  notifySuccess:        boolean;
+  notifyWarning:        boolean;
+  notifyError:          boolean;
+  notifyIntervention:   boolean;
+  notifyUnknown:        boolean;
+  animationsEnabled:    boolean;
+  historyLimitType:     'count' | 'days';
+  historyMaxCount:      number;
+  historyMaxDays:       number;
 }
 
 // ── Message interfaces ────────────────────────────────────────────────────────

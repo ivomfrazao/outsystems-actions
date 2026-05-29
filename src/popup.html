@@ -92,29 +92,36 @@
       letter-spacing: 0.01em;
     }
 
-    /* ── Panels (scrollable content area) ── */
+    /* ── Panels ── */
+    /* .panels clips the off-screen panel during transitions.
+       .panels-track is a flex row; JS translates it to reveal the active panel.
+       Each .panel has an explicit height (100% of the track, which is 100% of
+       .panels) so overflow-y: auto has a definite value to measure against. */
     .panels {
       flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .panels-track {
+      display: flex;
+      height: 100%;
+    }
+    .popup--animated .panels-track {
+      transition: transform 0.25s ease;
+    }
+    .panel {
+      flex: 0 0 360px;
+      height: 100%;
+      padding: 10px;
       overflow-y: auto;
-      overflow-x: hidden;
       scrollbar-width: thin;
       scrollbar-color: var(--c-btn-border) transparent;
     }
-    .panels::-webkit-scrollbar { width: 6px; }
-    .panels::-webkit-scrollbar-track { background: transparent; }
-    .panels::-webkit-scrollbar-thumb {
-      background: var(--c-btn-border);
-      border-radius: 3px;
-    }
-    .panels::-webkit-scrollbar-thumb:hover { background: var(--c-text-muted); }
-
-    .panel {
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .panel--hidden { display: none; }
+    .panel::-webkit-scrollbar { width: 6px; }
+    .panel::-webkit-scrollbar-track { background: transparent; }
+    .panel::-webkit-scrollbar-thumb { background: var(--c-btn-border); border-radius: 3px; }
+    .panel::-webkit-scrollbar-thumb:hover { background: var(--c-text-muted); }
+    .panel > .section + .section { margin-top: 8px; }
 
     /* ── Section block ── */
     .section {
@@ -220,6 +227,14 @@
       font-size: 11px;
       color: var(--c-text-secondary);
       margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card__time {
+      font-size: 10px;
+      color: var(--c-text-muted);
+      margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -374,9 +389,12 @@
       outline: 2px solid #3b82f6;
       outline-offset: 1px;
     }
+    .toggle input:disabled + .toggle__track { opacity: 0.4; cursor: not-allowed; }
+    .pref--disabled { opacity: 0.4; pointer-events: none; }
+    .pref__label--strong { font-weight: 600; }
 
     /* ── Settings tab bar ── */
-    [data-panel="settings"] { padding: 0; gap: 0; }
+    [data-panel="settings"] { padding: 0; }
     .settings-tabs {
       display: flex;
       background: var(--c-card-bg);
@@ -437,6 +455,7 @@
   </header>
 
   <main class="panels">
+    <div class="panels-track">
 
     <!-- Deployments panel: active items first, then history -->
     <section class="panel" data-panel="deployments">
@@ -452,7 +471,7 @@
     </section>
 
     <!-- Settings panel -->
-    <section class="panel panel--hidden" data-panel="settings">
+    <section class="panel" data-panel="settings">
 
       <div class="settings-tabs">
         <button class="settings-tab settings-tab--active" data-settings-tab="notifications">Notifications</button>
@@ -460,60 +479,45 @@
         <button class="settings-tab" data-settings-tab="appearance">Appearance</button>
       </div>
 
-      <div class="settings-pane settings-pane--hidden" data-settings-pane="appearance">
-        <div class="section">
-          <div class="section__body">
-            <div class="pref">
-              <span class="pref__label">Dark Mode</span>
-              <div class="seg" id="darkModeSeg">
-                <button class="seg__btn" data-value="off">Light</button>
-                <button class="seg__btn seg__btn--active" data-value="system">System</button>
-                <button class="seg__btn" data-value="on">Dark</button>
-              </div>
-            </div>
-            <div class="pref">
-              <span class="pref__label">Animations</span>
-              <label class="toggle">
-                <input type="checkbox" id="animationsEnabled">
-                <span class="toggle__track"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="settings-pane" data-settings-pane="notifications">
         <div class="section">
           <div class="section__body">
             <div class="pref">
+              <span class="pref__label pref__label--strong">All Notifications</span>
+              <label class="toggle">
+                <input type="checkbox" id="notificationsEnabled">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
+            <div class="pref" id="notifySuccessPref">
               <span class="pref__label">Success</span>
               <label class="toggle">
                 <input type="checkbox" id="notifySuccess">
                 <span class="toggle__track"></span>
               </label>
             </div>
-            <div class="pref">
+            <div class="pref" id="notifyWarningPref">
               <span class="pref__label">Warning</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyWarning">
                 <span class="toggle__track"></span>
               </label>
             </div>
-            <div class="pref">
+            <div class="pref" id="notifyErrorPref">
               <span class="pref__label">Error</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyError">
                 <span class="toggle__track"></span>
               </label>
             </div>
-            <div class="pref">
+            <div class="pref" id="notifyInterventionPref">
               <span class="pref__label">Intervention</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyIntervention">
                 <span class="toggle__track"></span>
               </label>
             </div>
-            <div class="pref">
+            <div class="pref" id="notifyUnknownPref">
               <span class="pref__label">Unknown</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyUnknown">
@@ -545,8 +549,31 @@
         </div>
       </div>
 
+      <div class="settings-pane settings-pane--hidden" data-settings-pane="appearance">
+        <div class="section">
+          <div class="section__body">
+            <div class="pref">
+              <span class="pref__label">Dark Mode</span>
+              <div class="seg" id="darkModeSeg">
+                <button class="seg__btn" data-value="off">Light</button>
+                <button class="seg__btn seg__btn--active" data-value="system">System</button>
+                <button class="seg__btn" data-value="on">Dark</button>
+              </div>
+            </div>
+            <div class="pref">
+              <span class="pref__label">Animations</span>
+              <label class="toggle">
+                <input type="checkbox" id="animationsEnabled">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </section>
 
+    </div><!-- /.panels-track -->
   </main>
 
   <nav class="nav">

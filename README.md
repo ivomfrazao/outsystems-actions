@@ -12,7 +12,8 @@ A Chromium extension that monitors OutSystems Service Center and LifeTime and no
 - Click any card to open the deployment — reuses an existing tab when possible
 - Delete individual history entries from the popup
 - Card enter/leave animations (can be disabled in Settings)
-- User-configurable notification preferences
+- Swipe or click the bottom nav to slide between Deployments and Settings; click animation mirrors the swipe motion
+- User-configurable notification preferences — master "All Notifications" toggle plus per-outcome filters (success, warning, error, intervention, unknown)
 
 ## Installation
 

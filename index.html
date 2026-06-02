@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OutSystems Actions — Deployment monitor for Chrome &amp; Edge</title>
+  <meta name="description" content="A browser extension that monitors OutSystems Service Center and LifeTime for deployments, publishes, and required interventions — with real-time notifications.">
+  <link rel="icon" type="image/png" href="icons/icon-128.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="/" class="nav-brand">
+        <img src="icons/icon-128.png" alt="OutSystems Actions icon" class="nav-icon">
+        OutSystems Actions
+      </a>
+      <a href="https://github.com/ivomfrazao/outsystems-actions" class="nav-link" target="_blank" rel="noopener">
+        <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <img src="icons/icon-128.png" alt="OutSystems Actions" class="hero-icon">
+      <h1 class="hero-title">OutSystems Actions</h1>
+      <p class="hero-subtitle">
+        Real-time deployment monitoring for OutSystems<br>
+        Service Center and LifeTime — right in your browser.
+      </p>
+      <div class="hero-badges">
+        <img src="https://img.shields.io/badge/Chrome-supported-4285F4?logo=googlechrome&logoColor=white" alt="Chrome supported">
+        <img src="https://img.shields.io/badge/Edge-supported-0078D7?logo=microsoftedge&logoColor=white" alt="Edge supported">
+        <img src="https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white" alt="Manifest V3">
+      </div>
+      <div class="hero-actions">
+        <a href="https://microsoftedge.microsoft.com/addons" class="btn btn-primary" target="_blank" rel="noopener">Install for Edge</a>
+        <a href="https://github.com/ivomfrazao/outsystems-actions" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="container">
+        <h2 class="section-title">Everything you need to stay on top of deployments</h2>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🔔</div>
+            <h3>Real-time notifications</h3>
+            <p>Get browser notifications the moment a deployment finishes — success, warning, error, or intervention required. Configure exactly which outcomes you care about.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📋</div>
+            <h3>Deployment history</h3>
+            <p>Keep track of recent deployments with a configurable history — set a max count or a max age in days. Click any card to jump straight to the deployment page.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔵</div>
+            <h3>Tab status indicators</h3>
+            <p>Active deployment tabs get an emoji prefix in the title so you can see the status at a glance across all your open tabs without switching to the extension popup.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌙</div>
+            <h3>Dark mode support</h3>
+            <p>Follows your system preference or lets you override — choose Light, System, or Dark in the extension settings. Every element adapts cleanly.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3>Stale deployment detection</h3>
+            <p>Closed your browser mid-deploy? When you reopen it, the extension marks unresolved deployments as Unknown. Reopen the page to resolve them to their real status.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⚙️</div>
+            <h3>Flexible configuration</h3>
+            <p>Toggle notifications per outcome, set history limits, enable or disable card animations. A master notification toggle lets you silence everything with one click.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="platforms" id="platforms">
+      <div class="container">
+        <h2 class="section-title">Works where you work</h2>
+        <div class="platform-grid">
+          <div class="platform-card">
+            <div class="platform-header">
+              <span class="platform-badge platform-sc">SC</span>
+              <h3>Service Center</h3>
+            </div>
+            <p>Monitors eSpace and Solution publish operations. Shows app name, environment, and outcome. Distinguishes <code>Deploy</code> from <code>Solution</code> publishes in the card meta row.</p>
+          </div>
+          <div class="platform-card">
+            <div class="platform-header">
+              <span class="platform-badge platform-lt">LT</span>
+              <h3>LifeTime</h3>
+            </div>
+            <p>Monitors deployment plan executions. Extracts deployed application names from the plan (e.g. <code>MyApp +2</code>) so you always know what was deployed and where.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="install" id="install">
+      <div class="container">
+        <h2 class="section-title">Get started in seconds</h2>
+        <div class="install-options">
+          <div class="install-card">
+            <h3>From the store</h3>
+            <p>Install directly from the browser extension store — no build step required.</p>
+            <a href="https://microsoftedge.microsoft.com/addons" class="btn btn-primary" target="_blank" rel="noopener">Edge Add-ons</a>
+          </div>
+          <div class="install-divider">or</div>
+          <div class="install-card">
+            <h3>From source</h3>
+            <ol class="install-steps">
+              <li>Clone the repo and run <code>npm ci &amp;&amp; npm run build</code></li>
+              <li>Go to <code>chrome://extensions/</code> (or <code>edge://extensions/</code>)</li>
+              <li>Enable <strong>Developer mode</strong></li>
+              <li>Click <strong>Load unpacked</strong> and select the <code>dist/</code> folder</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="permissions" id="permissions">
+      <div class="container">
+        <h2 class="section-title">Permissions used</h2>
+        <p class="permissions-intro">The extension requests only the permissions it needs to function:</p>
+        <div class="permissions-grid">
+          <div class="permission-row">
+            <code>notifications</code>
+            <span>Show browser notifications when deployments complete</span>
+          </div>
+          <div class="permission-row">
+            <code>storage</code>
+            <span>Persist deployment history and your preferences locally</span>
+          </div>
+          <div class="permission-row">
+            <code>tabs</code>
+            <span>Update the tab title with status indicators; reuse existing tabs when opening a deployment</span>
+          </div>
+          <div class="permission-row">
+            <code>scripting</code>
+            <span>Inject the content script that reads deployment status from the page</span>
+          </div>
+          <div class="permission-row">
+            <code>host: */ServiceCenter/* and */LifeTime/*</code>
+            <span>Access your OutSystems environments — no data is sent externally</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        OutSystems Actions is open source.
+        <a href="https://github.com/ivomfrazao/outsystems-actions" target="_blank" rel="noopener">View on GitHub</a>
+        &middot;
+        <a href="https://github.com/ivomfrazao/outsystems-actions/issues" target="_blank" rel="noopener">Report an issue</a>
+      </p>
+      <p class="footer-note">Not affiliated with OutSystems.</p>
+    </div>
+  </footer>
+</body>
+</html>

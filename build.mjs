@@ -3,7 +3,11 @@ import * as esbuild from 'esbuild';
 const isWatch = process.argv.includes('--watch');
 
 const config = {
-  entryPoints: ['src/background.ts', 'src/content.ts', 'src/popup.ts'],
+  entryPoints: {
+    background: 'src/background/index.ts',
+    content:    'src/content/index.ts',
+    popup:      'src/popup/index.ts',
+  },
   bundle: true,
   format: 'iife',
   target: 'chrome120',

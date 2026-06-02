@@ -11,7 +11,7 @@ import {
 const URL_PATTERNS = [
   { pattern: 'eSpace_Publish.aspx',   type: DType.eSpace },
   { pattern: 'Solution_Publish.aspx', type: DType.Solution },
-  { pattern: 'LifeTime',              type: DType.LifeTimeDeployment },
+  { pattern: 'Staging_Progress.aspx', type: DType.LifeTimeDeployment },
 ] as const satisfies ReadonlyArray<{ pattern: string; type: DeploymentType }>;
 
 const STATUS_KEYWORDS = {

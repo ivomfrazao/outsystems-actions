@@ -100,7 +100,7 @@ It must detect and classify:
 - `error`
 - `intervention`
 
-LifeTime deployment pages use URL paths with varying capitalisation (`/LifeTime/`, `/Lifetime/`, `/lifetime/`). All three variants must be matched in the manifest and treated as case-insensitive in the content script.
+LifeTime deployment execution pages have the URL path `Staging_Progress.aspx` (e.g. `/lifetime/Staging_Progress.aspx?StagingId=…`). The content script must match this path case-insensitively to distinguish execution pages from list pages (e.g. `Stagings_List.aspx`) that must not be monitored. The manifest host permissions continue to cover all LifeTime paths (`*/LifeTime/*`, `*/Lifetime/*`, `*/lifetime/*`) so the content script can run and then self-restrict by URL.
 
 The success state is signalled by the text `"Deployment finished with success"` inside the finish-box element. The environment name must be extracted from the `<span class="TitleIdentifier">` element in the page heading (the page title format `"Deployment to <Env>"` does not use the `" - "` separator used by Service Center pages).
 

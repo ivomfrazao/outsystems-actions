@@ -1,0 +1,56 @@
+{
+  "header_title": "OutSystems Actions",
+
+  "nav_deployments": "Processos",
+  "nav_settings": "Definições",
+
+  "section_deployments": "Processos",
+  "empty_deployments": "Sem processos recentes.",
+
+  "tab_notifications": "Notificações",
+  "tab_history": "Histórico",
+  "tab_appearance": "Aparência",
+
+  "pref_all_notifications": "Todas as Notificações",
+  "pref_notify_success": "Sucesso",
+  "pref_notify_warning": "Aviso",
+  "pref_notify_error": "Erro",
+  "pref_notify_intervention": "Intervenção",
+  "pref_notify_unknown": "Desconhecido",
+
+  "pref_max_deployments": "Máx. implementações",
+  "pref_max_days": "Máx. dias",
+
+  "pref_dark_mode": "Modo Escuro",
+  "pref_dark_mode_light": "Claro",
+  "pref_dark_mode_system": "Sistema",
+  "pref_dark_mode_dark": "Escuro",
+  "pref_animations": "Animações",
+  "pref_language": "Idioma",
+
+  "status_in_progress": "Em Progresso",
+  "status_success": "Sucesso",
+  "status_warning": "Aviso",
+  "status_error": "Erro",
+  "status_intervention": "Intervenção",
+  "status_unknown": "Desconhecido",
+
+  "type_deploy": "Implementar",
+  "type_solution": "Solução",
+  "type_unknown": "Desconhecido",
+
+  "delete_from_history": "Eliminar do histórico",
+
+  "notif_type_application": "Aplicação",
+  "notif_type_solution": "Solução",
+  "notif_type_lifetime": "LifeTime",
+  "notif_action_publish": "Publicação",
+  "notif_action_deployment": "Implementação",
+  "notif_status_successful": "com Sucesso",
+  "notif_status_warnings": "com Avisos",
+  "notif_status_errors": "com Erros",
+  "notif_status_intervention": "Requer Intervenção",
+  "notif_status_unknown": "Resultado Desconhecido",
+  "notif_name_unknown": "Desconhecido",
+  "notif_env_unknown": "Desconhecido"
+}

@@ -1,4 +1,6 @@
 import type { UserPreferences } from '../../shared/types';
+import type { SupportedLocale } from '../../shared/i18n';
+import { initI18n, applyI18n, saveLanguagePreference } from '../../shared/i18n';
 
 type DarkModePreference = 'on' | 'off' | 'system';
 
@@ -22,10 +24,10 @@ export function initTheme(): void {
     const stored = result['darkMode'];
     // Migrate from the old boolean format (true → 'on', false → 'off').
     let mode: DarkModePreference;
-    if      (stored === true)                                         mode = 'on';
-    else if (stored === false)                                        mode = 'off';
-    else if (stored === 'on' || stored === 'off' || stored === 'system') mode = stored;
-    else                                                              mode = 'system';
+    if      (stored === true)                                              mode = 'on';
+    else if (stored === false)                                             mode = 'off';
+    else if (stored === 'on' || stored === 'off' || stored === 'system')   mode = stored;
+    else                                                                   mode = 'system';
     applyTheme(mode);
   });
 
@@ -38,13 +40,29 @@ export function initTheme(): void {
   });
 }
 
-export function initAppearanceTab(prefs: UserPreferences, onSave: () => void): void {
+function initLanguageSelector(currentLang: SupportedLocale): void {
+  const select = document.getElementById('languageSelect') as HTMLSelectElement | null;
+  if (!select) return;
+  select.value = currentLang;
+  select.addEventListener('change', async () => {
+    const lang = select.value as SupportedLocale;
+    saveLanguagePreference(lang);
+    await initI18n(lang);
+    applyI18n();
+    select.value = lang;
+  });
+}
+
+export function initAppearanceTab(prefs: UserPreferences, currentLang: SupportedLocale, onSave: () => void): void {
   applyAnimations(prefs.animationsEnabled);
   const el = document.getElementById('animationsEnabled') as HTMLInputElement | null;
-  if (!el) return;
-  el.checked = prefs.animationsEnabled;
-  el.addEventListener('change', () => {
-    applyAnimations(el.checked);
-    onSave();
-  });
+  if (el) {
+    el.checked = prefs.animationsEnabled;
+    el.addEventListener('change', () => {
+      applyAnimations(el.checked);
+      onSave();
+    });
+  }
+
+  initLanguageSelector(currentLang);
 }

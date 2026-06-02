@@ -1,4 +1,5 @@
 import type { UserPreferences } from '../../shared/types';
+import type { SupportedLocale } from '../../shared/i18n';
 import type { PopupResponseMessage } from '../../shared/messages';
 import { initNotificationsTab } from './notifications';
 import { initHistoryTab } from './history';
@@ -42,7 +43,7 @@ function saveCurrentPreferences(): void {
   chrome.runtime.sendMessage({ type: 'updatePreferences', payload: prefs });
 }
 
-export function initSettings(): void {
+export function initSettings(currentLang: SupportedLocale): void {
   showSettingsTab('notifications');
   initSettingsTabNav();
 
@@ -51,6 +52,6 @@ export function initSettings(): void {
     const prefs = response.payload;
     initNotificationsTab(prefs, saveCurrentPreferences);
     initHistoryTab(prefs, saveCurrentPreferences);
-    initAppearanceTab(prefs, saveCurrentPreferences);
+    initAppearanceTab(prefs, currentLang, saveCurrentPreferences);
   });
 }

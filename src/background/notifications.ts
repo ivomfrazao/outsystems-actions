@@ -1,5 +1,6 @@
 import type { DeploymentEntry, FinalStatus, UserPreferences } from '../shared/types';
 import { DeploymentStatus, DeploymentType } from '../shared/types';
+import { t } from '../shared/i18n';
 
 const PREF_KEY_MAP = {
   [DeploymentStatus.Success]:      'notifySuccess',
@@ -17,24 +18,24 @@ const BADGE_CONFIG = {
   [DeploymentStatus.Unknown]:      { text: '?', color: '#808080' },
 } as const satisfies Record<FinalStatus, { text: string; color: string }>;
 
-const TYPE_LABEL: Record<string, string> = {
-  [DeploymentType.eSpace]:             'Application',
-  [DeploymentType.Solution]:           'Solution',
-  [DeploymentType.LifeTimeDeployment]: 'LifeTime',
+const TYPE_KEY: Record<string, string> = {
+  [DeploymentType.eSpace]:             'notif_type_application',
+  [DeploymentType.Solution]:           'notif_type_solution',
+  [DeploymentType.LifeTimeDeployment]: 'notif_type_lifetime',
 };
 
-const ACTION_LABEL: Record<string, string> = {
-  [DeploymentType.eSpace]:             'Publish',
-  [DeploymentType.Solution]:           'Publish',
-  [DeploymentType.LifeTimeDeployment]: 'Deployment',
+const ACTION_KEY: Record<string, string> = {
+  [DeploymentType.eSpace]:             'notif_action_publish',
+  [DeploymentType.Solution]:           'notif_action_publish',
+  [DeploymentType.LifeTimeDeployment]: 'notif_action_deployment',
 };
 
-const STATUS_LABEL: Record<FinalStatus, string> = {
-  [DeploymentStatus.Success]:      'Successful',
-  [DeploymentStatus.Warning]:      'with Warnings',
-  [DeploymentStatus.Error]:        'with Errors',
-  [DeploymentStatus.Intervention]: 'Needs Intervention',
-  [DeploymentStatus.Unknown]:      'Outcome Unknown',
+const STATUS_KEY: Record<FinalStatus, string> = {
+  [DeploymentStatus.Success]:      'notif_status_successful',
+  [DeploymentStatus.Warning]:      'notif_status_warnings',
+  [DeploymentStatus.Error]:        'notif_status_errors',
+  [DeploymentStatus.Intervention]: 'notif_status_intervention',
+  [DeploymentStatus.Unknown]:      'notif_status_unknown',
 };
 
 export function updateBadge(status: FinalStatus): void {
@@ -51,14 +52,16 @@ export function createNotification(entry: DeploymentEntry, prefs: UserPreference
   if (!prefs.notificationsEnabled) return;
   const status = entry.status as FinalStatus;
   if (!prefs[PREF_KEY_MAP[status]]) return;
-  const typeLabel   = TYPE_LABEL[entry.type]   ?? 'Deployment';
-  const action      = ACTION_LABEL[entry.type]  ?? 'Deployment';
-  const statusLabel = STATUS_LABEL[status];
+  const typeLabel   = t(TYPE_KEY[entry.type]   ?? 'notif_type_application');
+  const action      = t(ACTION_KEY[entry.type]  ?? 'notif_action_deployment');
+  const statusLabel = t(STATUS_KEY[status]);
+  const name        = entry.name        ?? t('notif_name_unknown');
+  const environment = entry.environment ?? t('notif_env_unknown');
   const options: chrome.notifications.NotificationOptions<true> = {
     type:               'basic',
     iconUrl:            'icons/icon-48.png',
     title:              `${typeLabel} ${action} ${statusLabel}`,
-    message:            `${entry.name ?? 'Unknown'} in ${entry.environment ?? 'Unknown'} at ${new Date(entry.timestamp).toLocaleTimeString()}`,
+    message:            `${name} in ${environment} at ${new Date(entry.timestamp).toLocaleTimeString()}`,
     requireInteraction: false,
   };
   chrome.notifications.create(`deployment-${entry.id}`, options);

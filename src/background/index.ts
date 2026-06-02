@@ -5,6 +5,20 @@ import { getDeployments, setDeployments, saveDeployments } from './deployments/s
 import { getPreferences, setPreferences, DEFAULT_PREFERENCES } from './preferences/store';
 import { registerMessageRouter } from './router';
 import { registerLifecycleListeners } from './lifecycle';
+import { initI18n, loadLanguagePreference, SUPPORTED_LOCALES } from '../shared/i18n';
+import type { SupportedLocale } from '../shared/i18n';
+
+loadLanguagePreference().then(lang => initI18n(lang));
+
+chrome.storage.onChanged.addListener((changes) => {
+  if ('language' in changes) {
+    const lang = changes['language'].newValue as string;
+    const locale = (SUPPORTED_LOCALES as readonly string[]).includes(lang)
+      ? lang as SupportedLocale
+      : 'en';
+    initI18n(locale);
+  }
+});
 
 // Load persisted state. Also handles one-time migration from the old split
 // storage format (history + pendingDeployments + activeDeployments keys).

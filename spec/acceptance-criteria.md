@@ -1,6 +1,6 @@
 # OutSystems Actions — Acceptance Criteria
 
-**Version:** 1.4
+**Version:** 1.5
 
 ---
 
@@ -118,7 +118,15 @@
 - [ ] User can enable/disable notifications per final state.
 - [ ] Preferences persist across browser sessions.
 
-### 7.0 Dark Mode
+### 7.0 Language
+
+- [ ] The Appearance tab shows a segmented control listing all supported languages.
+- [ ] Selecting a language immediately updates all visible UI strings without closing or reopening the popup.
+- [ ] Browser notifications use the selected language after it is changed.
+- [ ] The selected language persists across browser sessions.
+- [ ] When no language preference is stored, English is used as the default.
+
+### 7.1 Dark Mode
 
 - [ ] Settings panel shows a three-option segmented control: Light / System / Dark.
 - [ ] Selecting "Light" always applies the light theme.
@@ -127,7 +135,7 @@
 - [ ] The selected mode persists across browser sessions.
 - [ ] An existing stored boolean value (`true`/`false`) is treated as `'on'`/`'off'` without error.
 
-### 7.1 Animations
+### 7.2 Animations
 
 - [ ] Settings panel exposes an Animations toggle.
 - [ ] When Animations is on, cards animate in when they appear.
@@ -136,7 +144,7 @@
 - [ ] The toggle is respected immediately without a page reload.
 - [ ] Default value is enabled (on).
 
-### 7.2 History Limits
+### 7.3 History Limits
 
 - [ ] Settings panel shows two radio options: "Max deployments" and "Max days".
 - [ ] Selecting a radio enables its associated number input and disables the other.

@@ -1,0 +1,56 @@
+{
+  "header_title": "OutSystems Actions",
+
+  "nav_deployments": "Processes",
+  "nav_settings": "Settings",
+
+  "section_deployments": "Processes",
+  "empty_deployments": "No recent processes.",
+
+  "tab_notifications": "Notifications",
+  "tab_history": "History",
+  "tab_appearance": "Appearance",
+
+  "pref_all_notifications": "All Notifications",
+  "pref_notify_success": "Success",
+  "pref_notify_warning": "Warning",
+  "pref_notify_error": "Error",
+  "pref_notify_intervention": "Intervention",
+  "pref_notify_unknown": "Unknown",
+
+  "pref_max_deployments": "Max deployments",
+  "pref_max_days": "Max days",
+
+  "pref_dark_mode": "Dark Mode",
+  "pref_dark_mode_light": "Light",
+  "pref_dark_mode_system": "System",
+  "pref_dark_mode_dark": "Dark",
+  "pref_animations": "Animations",
+  "pref_language": "Language",
+
+  "status_in_progress": "In Progress",
+  "status_success": "Success",
+  "status_warning": "Warning",
+  "status_error": "Error",
+  "status_intervention": "Intervention",
+  "status_unknown": "Unknown",
+
+  "type_deploy": "Deploy",
+  "type_solution": "Solution",
+  "type_unknown": "Unknown",
+
+  "delete_from_history": "Delete from history",
+
+  "notif_type_application": "Application",
+  "notif_type_solution": "Solution",
+  "notif_type_lifetime": "LifeTime",
+  "notif_action_publish": "Publish",
+  "notif_action_deployment": "Deployment",
+  "notif_status_successful": "Successful",
+  "notif_status_warnings": "with Warnings",
+  "notif_status_errors": "with Errors",
+  "notif_status_intervention": "Needs Intervention",
+  "notif_status_unknown": "Outcome Unknown",
+  "notif_name_unknown": "Unknown",
+  "notif_env_unknown": "Unknown"
+}

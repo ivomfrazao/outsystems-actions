@@ -349,6 +349,20 @@
     .pref__input:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
     .pref__input:disabled { opacity: 0.35; cursor: not-allowed; }
 
+    /* ── Language select ── */
+    .pref__select {
+      font: inherit;
+      font-size: 12px;
+      color: var(--c-text-primary);
+      background: var(--c-btn-bg);
+      border: 1px solid var(--c-btn-border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .pref__select:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
+
     /* ── CSS-only toggle switch ── */
     .toggle {
       position: relative;
@@ -451,7 +465,7 @@
 
   <header class="header">
     <div class="header__accent"></div>
-    <span class="header__title">OutSystems Actions</span>
+    <span class="header__title" data-i18n="header_title">OutSystems Actions</span>
   </header>
 
   <main class="panels">
@@ -461,11 +475,11 @@
     <section class="panel" data-panel="deployments">
       <div class="section">
         <div class="section__header">
-          <span class="section__title">Deployments</span>
+          <span class="section__title" data-i18n="section_deployments">Processes</span>
           <span class="section__badge" data-badge="deployments">0</span>
         </div>
         <div class="section__body" data-list="deployments">
-          <p class="empty" data-empty="deployments">No recent deployments.</p>
+          <p class="empty" data-empty="deployments" data-i18n="empty_deployments">No recent processes.</p>
         </div>
       </div>
     </section>
@@ -474,51 +488,51 @@
     <section class="panel" data-panel="settings">
 
       <div class="settings-tabs">
-        <button class="settings-tab settings-tab--active" data-settings-tab="notifications">Notifications</button>
-        <button class="settings-tab" data-settings-tab="history">History</button>
-        <button class="settings-tab" data-settings-tab="appearance">Appearance</button>
+        <button class="settings-tab settings-tab--active" data-settings-tab="notifications" data-i18n="tab_notifications">Notifications</button>
+        <button class="settings-tab" data-settings-tab="history" data-i18n="tab_history">History</button>
+        <button class="settings-tab" data-settings-tab="appearance" data-i18n="tab_appearance">Appearance</button>
       </div>
 
       <div class="settings-pane" data-settings-pane="notifications">
         <div class="section">
           <div class="section__body">
             <div class="pref">
-              <span class="pref__label pref__label--strong">All Notifications</span>
+              <span class="pref__label pref__label--strong" data-i18n="pref_all_notifications">All Notifications</span>
               <label class="toggle">
                 <input type="checkbox" id="notificationsEnabled">
                 <span class="toggle__track"></span>
               </label>
             </div>
             <div class="pref" id="notifySuccessPref">
-              <span class="pref__label">Success</span>
+              <span class="pref__label" data-i18n="pref_notify_success">Success</span>
               <label class="toggle">
                 <input type="checkbox" id="notifySuccess">
                 <span class="toggle__track"></span>
               </label>
             </div>
             <div class="pref" id="notifyWarningPref">
-              <span class="pref__label">Warning</span>
+              <span class="pref__label" data-i18n="pref_notify_warning">Warning</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyWarning">
                 <span class="toggle__track"></span>
               </label>
             </div>
             <div class="pref" id="notifyErrorPref">
-              <span class="pref__label">Error</span>
+              <span class="pref__label" data-i18n="pref_notify_error">Error</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyError">
                 <span class="toggle__track"></span>
               </label>
             </div>
             <div class="pref" id="notifyInterventionPref">
-              <span class="pref__label">Intervention</span>
+              <span class="pref__label" data-i18n="pref_notify_intervention">Intervention</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyIntervention">
                 <span class="toggle__track"></span>
               </label>
             </div>
             <div class="pref" id="notifyUnknownPref">
-              <span class="pref__label">Unknown</span>
+              <span class="pref__label" data-i18n="pref_notify_unknown">Unknown</span>
               <label class="toggle">
                 <input type="checkbox" id="notifyUnknown">
                 <span class="toggle__track"></span>
@@ -534,14 +548,14 @@
             <div class="pref">
               <label class="pref__radio-label">
                 <input type="radio" name="historyLimitType" value="count" id="limitByCount" checked>
-                <span class="pref__label">Max deployments</span>
+                <span class="pref__label" data-i18n="pref_max_deployments">Max deployments</span>
               </label>
               <input type="number" id="historyMaxCount" min="1" max="100" value="5" class="pref__input">
             </div>
             <div class="pref">
               <label class="pref__radio-label">
                 <input type="radio" name="historyLimitType" value="days" id="limitByDays">
-                <span class="pref__label">Max days</span>
+                <span class="pref__label" data-i18n="pref_max_days">Max days</span>
               </label>
               <input type="number" id="historyMaxDays" min="1" max="365" value="1" class="pref__input">
             </div>
@@ -553,19 +567,26 @@
         <div class="section">
           <div class="section__body">
             <div class="pref">
-              <span class="pref__label">Dark Mode</span>
+              <span class="pref__label" data-i18n="pref_dark_mode">Dark Mode</span>
               <div class="seg" id="darkModeSeg">
-                <button class="seg__btn" data-value="off">Light</button>
-                <button class="seg__btn seg__btn--active" data-value="system">System</button>
-                <button class="seg__btn" data-value="on">Dark</button>
+                <button class="seg__btn" data-value="off" data-i18n="pref_dark_mode_light">Light</button>
+                <button class="seg__btn seg__btn--active" data-value="system" data-i18n="pref_dark_mode_system">System</button>
+                <button class="seg__btn" data-value="on" data-i18n="pref_dark_mode_dark">Dark</button>
               </div>
             </div>
             <div class="pref">
-              <span class="pref__label">Animations</span>
+              <span class="pref__label" data-i18n="pref_animations">Animations</span>
               <label class="toggle">
                 <input type="checkbox" id="animationsEnabled">
                 <span class="toggle__track"></span>
               </label>
+            </div>
+            <div class="pref">
+              <span class="pref__label" data-i18n="pref_language">Language</span>
+              <select id="languageSelect" class="pref__select">
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+              </select>
             </div>
           </div>
         </div>
@@ -579,11 +600,11 @@
   <nav class="nav">
     <button class="nav__item nav__item--active" data-tab="deployments">
       <span class="nav__icon">&#9889;</span>
-      <span class="nav__label">Deployments</span>
+      <span class="nav__label" data-i18n="nav_deployments">Processes</span>
     </button>
     <button class="nav__item" data-tab="settings">
       <span class="nav__icon">&#9881;</span>
-      <span class="nav__label">Settings</span>
+      <span class="nav__label" data-i18n="nav_settings">Settings</span>
     </button>
   </nav>
 

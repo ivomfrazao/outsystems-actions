@@ -1,6 +1,6 @@
 # OutSystems Actions — Main Specification
 
-**Version:** 1.5
+**Version:** 1.6
 **Purpose:** Define the functional and architectural requirements for a Chromium-based extension that monitors OutSystems Service Center and LifeTime and notifies the user on relevant events.
 
 ---
@@ -289,7 +289,15 @@ When the user opens a deployment URL that has an `unknown` entry:
 
 The extension must allow the user to configure the following settings. All preferences persist across sessions via `chrome.storage.local`.
 
-### 7.0 Appearance — Dark Mode
+### 7.0 Appearance — Language
+
+The popup allows the user to select the display language via a segmented control in the Appearance tab. The set of supported languages is defined by the locale files present in `src/locales/`; adding a new language requires only a new JSON file there and a corresponding button in the control.
+
+Default: **English** (`en`). The selected locale persists across sessions, stored as a BCP 47 language tag in `chrome.storage.local` under the key `language`. When no value is stored, English is used.
+
+Changing the language must take effect immediately — all UI strings update in place without closing and reopening the popup. The background service worker must also use the selected language for notification text, re-initialising when the preference changes.
+
+### 7.1 Appearance — Dark Mode
 
 The popup supports three theme modes, selectable via a segmented control:
 
@@ -301,7 +309,7 @@ The popup supports three theme modes, selectable via a segmented control:
 
 Default: **System**. The selected mode persists across sessions, stored as `'on'`, `'off'`, or `'system'` in `chrome.storage.local` under the key `darkMode`. When reading a stored boolean (legacy format), `true` maps to `'on'` and `false` maps to `'off'`.
 
-### 7.1 Notification Filters
+### 7.2 Notification Filters
 
 A global **All Notifications** master toggle silences all browser notifications in one action. When disabled, no notification fires regardless of the per-outcome settings below; when re-enabled, the individual settings are restored exactly as they were — the master toggle does not modify them.
 
@@ -316,7 +324,7 @@ Controls which **final** outcomes trigger browser notifications (subject to the 
 
 `in_progress` is never user-configurable and never triggers a notification.
 
-### 7.2 Animations
+### 7.3 Animations
 
 A global **Animations** toggle controls whether animations play in the popup.
 
@@ -327,7 +335,7 @@ A global **Animations** toggle controls whether animations play in the popup.
 - The toggle must be respected everywhere animations could occur; there must be no animation bypass.
 - Default: enabled.
 
-### 7.3 History Limits
+### 7.4 History Limits
 
 The user selects one limit mode (see §6.1) and sets the corresponding value:
 
@@ -370,18 +378,29 @@ Responsibilities:
 
 Responsibilities:
 
-- Display active (in-progress) and history deployments as clickable cards
+- Display active (in-progress) and history deployments as clickable cards (the panel is labelled "Processes" in the UI, reflecting that it covers both publish and deployment operations)
 - Card click opens the deployment, reusing an existing tab when possible (see §6.2)
 - History cards expose a delete button to remove individual entries
 - Animate cards in/out when they appear or disappear (gated by the Animations preference)
 - Provide notification preference toggles
+- Provide a Language dropdown (`<select>`) in the Appearance tab; adding a new language requires only a new `<option>` element and a locale file — no structural HTML change; changing the language takes effect immediately without reopening the popup
 - Provide a Dark Mode segmented control (Light / System / Dark)
 - Provide an Animations toggle
 - Provide history limit settings (mode: max count or max days)
 - The Deployments and Settings panels sit side-by-side in a horizontal scroll container; the bottom nav bar both indicates and controls the active panel — clicking a nav item scrolls to that panel (smooth when animations are enabled, instant when not); touch users can also swipe directly between panels
 - Clear badge when opened
 
-### 8.2 Permissions
+### 8.2 Internationalisation
+
+All user-visible strings — popup labels, settings, card status tags, and browser notification text — are externalised into locale JSON files under `locales/`. Each file is a flat key-to-string map for one language. Adding a new language requires only a new JSON file and a new button in the Language segmented control.
+
+At popup open, the extension fetches the active locale file (via `chrome.runtime.getURL`) and applies all translations in a single DOM pass against `[data-i18n]` attributes before any content renders. Strings in dynamically-rendered card content (status tags, type labels, delete button labels) are resolved at card-build time via the same `t(key)` lookup function, so cards built after a language change automatically use the current locale.
+
+The background service worker initialises the same locale at startup and re-initialises it via a `chrome.storage.onChanged` listener whenever the user selects a different language, so browser notification text stays in sync without requiring a service worker restart.
+
+Chrome's native `chrome.i18n` API is intentionally not used for runtime UI strings. See [ADR 001](adr/001-custom-i18n.md) for the full rationale.
+
+### 8.3 Permissions
 
 The extension requires:
 

@@ -19,7 +19,7 @@ A Chromium extension that monitors OutSystems Service Center and LifeTime and no
 
 ## Installation
 
-Install from the Chrome Web Store or Microsoft Edge Add-ons store.
+Install from the [Microsoft Edge Add-ons store](https://microsoftedge.microsoft.com/addons/detail/outsystems-actions/ilcbffhgicjjmghfcelmndbfjjilmomg) or the Chrome Web Store.
 
 To install manually from source:
 
@@ -62,7 +62,7 @@ npm run build
 cd dist && zip -r ../extension.zip .
 ```
 
-Upload `extension.zip` manually to the [Edge Add-ons Partner Center](https://partner.microsoft.com/en-us/dashboard/microsoftedge).
+Upload `extension.zip` manually to the [Edge Add-ons Partner Center](https://partner.microsoft.com/en-us/dashboard/microsoftedge) and submit for review.
 
 ## Files
 
@@ -79,3 +79,11 @@ Upload `extension.zip` manually to the [Edge Add-ons Partner Center](https://par
 
 - Tested on Chromium-based browsers.
 - Permissions required: notifications, storage, tabs, scripting, host access to Service Center and LifeTime domains.
+
+## Disclaimer
+
+This project is not affiliated with, endorsed by, or associated with OutSystems in any way. OutSystems is a trademark of OutSystems, S.A.
+
+## License
+
+[MIT](LICENSE)

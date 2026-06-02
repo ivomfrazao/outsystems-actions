@@ -15,6 +15,12 @@ This package is designed for **spec-driven development**, meaning:
 - **data-model.md** — Data structures used across the extension (events, history, preferences, state).
 - **acceptance-criteria.md** — Independent acceptance criteria for validation and QA.
 
+## Architecture Decision Records
+
+The `adr/` directory contains Architecture Decision Records for non-obvious design choices.
+
+- **[adr/001-custom-i18n.md](adr/001-custom-i18n.md)** — Why a custom i18n module is used instead of Chrome's native `chrome.i18n` API.
+
 ## Scope
 
 This spec covers:

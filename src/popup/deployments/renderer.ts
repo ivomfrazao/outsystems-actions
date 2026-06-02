@@ -1,20 +1,30 @@
 import type { DeploymentEntry } from '../../shared/types';
 import { DeploymentStatus, DeploymentType } from '../../shared/types';
+import { t } from '../../shared/i18n';
 
 type TagStyle = 'in-progress' | 'success' | 'warning' | 'error' | 'intervention' | 'unknown';
 
-const TAG_LABELS: Record<string, { label: string; style: TagStyle }> = {
-  [DeploymentStatus.InProgress]:   { label: 'In Progress',  style: 'in-progress'  },
-  [DeploymentStatus.Success]:      { label: 'Success',      style: 'success'      },
-  [DeploymentStatus.Warning]:      { label: 'Warning',      style: 'warning'      },
-  [DeploymentStatus.Error]:        { label: 'Error',        style: 'error'        },
-  [DeploymentStatus.Intervention]: { label: 'Intervention', style: 'intervention' },
-  [DeploymentStatus.Unknown]:      { label: 'Unknown',      style: 'unknown'      },
+const TAG_STYLE: Record<string, TagStyle> = {
+  [DeploymentStatus.InProgress]:   'in-progress',
+  [DeploymentStatus.Success]:      'success',
+  [DeploymentStatus.Warning]:      'warning',
+  [DeploymentStatus.Error]:        'error',
+  [DeploymentStatus.Intervention]: 'intervention',
+  [DeploymentStatus.Unknown]:      'unknown',
 };
 
-const TYPE_LABELS: Partial<Record<string, string>> = {
-  [DeploymentType.LifeTimeDeployment]: 'Deploy',
-  [DeploymentType.Solution]:           'Solution',
+const TAG_KEY: Record<string, string> = {
+  [DeploymentStatus.InProgress]:   'status_in_progress',
+  [DeploymentStatus.Success]:      'status_success',
+  [DeploymentStatus.Warning]:      'status_warning',
+  [DeploymentStatus.Error]:        'status_error',
+  [DeploymentStatus.Intervention]: 'status_intervention',
+  [DeploymentStatus.Unknown]:      'status_unknown',
+};
+
+const TYPE_KEY: Partial<Record<string, string>> = {
+  [DeploymentType.LifeTimeDeployment]: 'type_deploy',
+  [DeploymentType.Solution]:           'type_solution',
 };
 
 // Tracks which card IDs are currently in the DOM so we can diff on each render.
@@ -26,15 +36,16 @@ function animationsEnabled(): boolean {
 
 function buildCard(entry: DeploymentEntry, isHistory: boolean): HTMLElement {
   const { id, name, status, type: deploymentType, environment, server, timestamp, url, startTime, endTime, tabId } = entry;
-  const t         = TAG_LABELS[status];
-  const typeLabel = TYPE_LABELS[deploymentType] ?? null;
+  const style     = TAG_STYLE[status];
+  const tagLabel  = t(TAG_KEY[status] ?? 'status_unknown');
+  const typeLabel = TYPE_KEY[deploymentType] ? t(TYPE_KEY[deploymentType]!) : null;
 
   const card = document.createElement('div');
   card.className       = 'card';
   card.dataset['cardId'] = id;
 
   const accent = document.createElement('div');
-  accent.className = `card__accent${t ? ` card__accent--${t.style}` : ''}`;
+  accent.className = `card__accent${style ? ` card__accent--${style}` : ''}`;
 
   const body = document.createElement('div');
   body.className = 'card__body';
@@ -45,21 +56,21 @@ function buildCard(entry: DeploymentEntry, isHistory: boolean): HTMLElement {
 
   const nameEl = document.createElement('span');
   nameEl.className   = 'card__name';
-  nameEl.textContent = name ?? typeLabel ?? 'Unknown';
+  nameEl.textContent = name ?? typeLabel ?? t('type_unknown');
   top.appendChild(nameEl);
 
-  if (t) {
+  if (style) {
     const tagEl = document.createElement('span');
-    tagEl.className   = `card__tag card__tag--${t.style}`;
-    tagEl.textContent = t.label;
+    tagEl.className   = `card__tag card__tag--${style}`;
+    tagEl.textContent = tagLabel;
     top.appendChild(tagEl);
   }
 
   if (isHistory) {
     const del = document.createElement('button');
     del.className = 'btn-delete';
-    del.title     = 'Delete from history';
-    del.setAttribute('aria-label', 'Delete from history');
+    del.title     = t('delete_from_history');
+    del.setAttribute('aria-label', t('delete_from_history'));
     del.textContent = '×';
     del.addEventListener('click', (e) => {
       e.stopPropagation();

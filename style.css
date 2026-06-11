@@ -1,16 +1,26 @@
+/* Fallback font tuned to Inter's metrics — prevents layout shift */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  ascent-override: 90.20%;
+  descent-override: 22.48%;
+  line-gap-override: 0%;
+  size-adjust: 107.40%;
+}
+
 :root {
-  --color-bg: #0f1117;
-  --color-bg-card: #1a1d27;
-  --color-bg-card-hover: #1f2235;
-  --color-border: #2a2d3e;
-  --color-text: #e2e4ed;
-  --color-text-muted: #8b8fa8;
+  --color-bg: #0e0e0e;
+  --color-bg-card: #161616;
+  --color-bg-card-hover: #1c1c1c;
+  --color-border: #262626;
+  --color-text: #f0f0f0;
+  --color-text-muted: #8a8a8a;
   --color-primary: #e8541a;
   --color-primary-hover: #d44a12;
   --color-primary-dim: rgba(232, 84, 26, 0.12);
-  --color-secondary-bg: #1a1d27;
-  --color-secondary-border: #2a2d3e;
-  --color-code-bg: #252839;
+  --color-secondary-bg: #161616;
+  --color-secondary-border: #262626;
+  --color-code-bg: #1c1c1c;
   --color-sc: #e8541a;
   --color-lt: #3b82f6;
   --radius: 10px;
@@ -20,18 +30,18 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --color-bg: #f8f9fc;
+    --color-bg: #f9f9f9;
     --color-bg-card: #ffffff;
-    --color-bg-card-hover: #f0f2f8;
-    --color-border: #e2e5ef;
-    --color-text: #1a1d2e;
-    --color-text-muted: #6b7094;
+    --color-bg-card-hover: #f0f0f0;
+    --color-border: #e0e0e0;
+    --color-text: #111111;
+    --color-text-muted: #555555;
     --color-primary: #e8541a;
     --color-primary-hover: #d44a12;
     --color-primary-dim: rgba(232, 84, 26, 0.08);
     --color-secondary-bg: #ffffff;
-    --color-secondary-border: #e2e5ef;
-    --color-code-bg: #f0f2f8;
+    --color-secondary-border: #e0e0e0;
+    --color-code-bg: #f0f0f0;
     --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
   }
 }
@@ -41,7 +51,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Inter Fallback', system-ui, -apple-system, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
@@ -52,7 +62,7 @@ a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 code {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, monospace;
   font-size: 0.875em;
   background: var(--color-code-bg);
   border: 1px solid var(--color-border);

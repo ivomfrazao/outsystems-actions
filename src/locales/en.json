@@ -37,12 +37,14 @@
 
   "type_deploy": "Deploy",
   "type_solution": "Solution",
+  "type_module": "Module",
   "type_unknown": "Unknown",
 
   "delete_from_history": "Delete from history",
 
   "notif_type_application": "Application",
   "notif_type_solution": "Solution",
+  "notif_type_module": "Module",
   "notif_type_lifetime": "LifeTime",
   "notif_action_publish": "Publish",
   "notif_action_deployment": "Deployment",

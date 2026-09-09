@@ -19,7 +19,7 @@ const BADGE_CONFIG = {
 } as const satisfies Record<FinalStatus, { text: string; color: string }>;
 
 const TYPE_KEY: Record<string, string> = {
-  [DeploymentType.eSpace]:             'notif_type_application',
+  [DeploymentType.eSpace]:             'notif_type_module',
   [DeploymentType.Solution]:           'notif_type_solution',
   [DeploymentType.LifeTimeDeployment]: 'notif_type_lifetime',
 };

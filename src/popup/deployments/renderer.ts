@@ -23,6 +23,7 @@ const TAG_KEY: Record<string, string> = {
 };
 
 const TYPE_KEY: Partial<Record<string, string>> = {
+  [DeploymentType.eSpace]:             'type_module',
   [DeploymentType.LifeTimeDeployment]: 'type_deploy',
   [DeploymentType.Solution]:           'type_solution',
 };

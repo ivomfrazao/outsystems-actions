@@ -40,6 +40,13 @@ export function extractMetadata(originalTitle: string, deploymentType: Deploymen
     name = match?.[1]?.trim() ?? null;
   }
 
+  // For eSpace (module) publishes, the name is in the page heading "Publish Module <Name>".
+  if (!name && deploymentType === DType.eSpace) {
+    const headingText = document.querySelector('[id$="_wtTitle"]:not([id$="wtTitle_wtTitle"])')?.textContent?.trim() ?? '';
+    const match = headingText.match(/Publish\s+Module\s+(.+)$/i);
+    name = match?.[1]?.trim() ?? null;
+  }
+
   // For LifeTime deployments, extract app names from the deployment plan list.
   if (!name && deploymentType === DType.LifeTimeDeployment) {
     const opEls = Array.from(document.querySelectorAll('[id*="_wtListApplications_ctl"][id$="_wtOperation"]'));

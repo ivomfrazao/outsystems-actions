@@ -2,7 +2,7 @@ import type { UserPreferences } from '../../shared/types';
 import type { SupportedLocale } from '../../shared/i18n';
 import type { PopupResponseMessage } from '../../shared/messages';
 import { initNotificationsTab } from './notifications';
-import { initHistoryTab } from './history';
+import { initHistoryTab, getCommittedHistoryLimits } from './history';
 import { initAppearanceTab } from './appearance';
 import { initAboutTab } from './about';
 
@@ -23,11 +23,9 @@ function initSettingsTabNav(): void {
 
 // Reads the current form state across all settings panes and persists to background.
 // Called by each sub-tab controller whenever any value changes.
+// History limits come from the History tab's confirmed values, not its form,
+// so an unconfirmed change there isn't saved by a toggle on another tab.
 function saveCurrentPreferences(): void {
-  const limitType = (
-    document.querySelector<HTMLInputElement>('input[name="historyLimitType"]:checked')?.value ?? 'count'
-  ) as 'count' | 'days';
-
   const prefs: UserPreferences = {
     notificationsEnabled: (document.getElementById('notificationsEnabled') as HTMLInputElement)?.checked ?? true,
     notifySuccess:        (document.getElementById('notifySuccess')        as HTMLInputElement)?.checked ?? true,
@@ -36,9 +34,7 @@ function saveCurrentPreferences(): void {
     notifyIntervention:   (document.getElementById('notifyIntervention')   as HTMLInputElement)?.checked ?? true,
     notifyUnknown:        (document.getElementById('notifyUnknown')        as HTMLInputElement)?.checked ?? true,
     animationsEnabled:    (document.getElementById('animationsEnabled')    as HTMLInputElement)?.checked ?? true,
-    historyLimitType:     limitType,
-    historyMaxCount:      parseInt((document.getElementById('historyMaxCount') as HTMLInputElement)?.value ?? '5',  10) || 5,
-    historyMaxDays:       parseInt((document.getElementById('historyMaxDays')  as HTMLInputElement)?.value ?? '1',  10) || 1,
+    ...getCommittedHistoryLimits(),
   };
 
   chrome.runtime.sendMessage({ type: 'updatePreferences', payload: prefs });

@@ -387,6 +387,17 @@
     .btn:hover:not(:disabled) { background: var(--c-btn-hover); }
     .btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: 1px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn--primary { color: #ffffff; background: var(--c-toggle-on); border-color: var(--c-toggle-on); }
+    .btn--primary:hover:not(:disabled) { background: var(--c-toggle-on); filter: brightness(1.15); }
+    .confirm {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--c-section-head-bg);
+    }
+    .confirm__text { font-size: 11px; color: var(--c-text-primary); }
     .hint {
       font-size: 11px;
       color: var(--c-text-muted);
@@ -590,6 +601,13 @@
                 <span class="pref__label" data-i18n="pref_max_days">Max days</span>
               </label>
               <input type="number" id="historyMaxDays" min="1" max="365" value="1" class="pref__input">
+            </div>
+            <div class="confirm" id="historyConfirm">
+              <span class="confirm__text" id="historyConfirmText"></span>
+              <div class="pref__actions">
+                <button class="btn" id="historyCancel" data-i18n="history_cancel" disabled>Cancel</button>
+                <button class="btn btn--primary" id="historyApply" data-i18n="history_apply" disabled>Apply</button>
+              </div>
             </div>
           </div>
         </div>

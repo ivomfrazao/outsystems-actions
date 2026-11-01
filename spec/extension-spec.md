@@ -342,7 +342,7 @@ The user selects one limit mode (see §6.1) and sets the corresponding value:
 - **Mode: Max deployments** — integer, default 5, range 1–100. Only the N most recent entries are kept.
 - **Mode: Max days** — integer, default 1, range 1–365. Entries older than N days are removed.
 
-Only the active mode is enforced. Changing the mode or the value applies immediately to existing history.
+Only the active mode is enforced. Every change is held until confirmed. Below the fields, **Cancel** (restores the previous values) and **Apply** are always shown but disabled until the form differs from the saved values; then a message states how many entries applying will delete (including 0). The new values are saved only when Apply is pressed. Editing back to the saved values disables the buttons again. Unconfirmed values are never saved, even when another setting is changed in the meantime.
 
 ### 7.5 About & Diagnostics
 

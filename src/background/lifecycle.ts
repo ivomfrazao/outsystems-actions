@@ -5,6 +5,7 @@ import { getDeployments, setDeployments, sameDeploymentUrl } from './deployments
 import { enforceHistoryLimits } from './deployments/history';
 import { setPreferences } from './preferences/store';
 import { createNotification } from './notifications';
+import { debugLog } from './debug-log';
 
 // Marks candidate InProgress entries as Unknown, unless a conclusive status for
 // the same URL already exists (race-condition guard).
@@ -40,6 +41,7 @@ export function registerLifecycleListeners(getPreferences: () => UserPreferences
         );
         setDeployments(updated);
         enforceHistoryLimits(getPreferences());
+        debugLog('background', 'marked-unknown', { trigger: 'tab closed' }, tabId);
         // Unknown notifications only fire at browser startup, not on tab close.
       }
     );
@@ -58,6 +60,10 @@ export function registerLifecycleListeners(getPreferences: () => UserPreferences
         const updated = markAsUnknown(stored, d => d.status === DeploymentStatus.InProgress);
         setDeployments(updated);
         enforceHistoryLimits(getPreferences());
+        debugLog('background', 'marked-unknown', {
+          trigger: 'browser startup',
+          count:   updated.filter(d => d.status === DeploymentStatus.Unknown).length,
+        });
 
         for (const entry of updated.filter(d => d.status === DeploymentStatus.Unknown)) {
           createNotification(entry, getPreferences());

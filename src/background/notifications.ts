@@ -1,6 +1,7 @@
 import type { DeploymentEntry, FinalStatus, UserPreferences } from '../shared/types';
 import { DeploymentStatus, DeploymentType } from '../shared/types';
 import { t, i18nReady } from '../shared/i18n';
+import { debugLog } from './debug-log';
 
 const PREF_KEY_MAP = {
   [DeploymentStatus.Success]:      'notifySuccess',
@@ -49,9 +50,14 @@ export function clearBadge(): void {
 }
 
 export async function createNotification(entry: DeploymentEntry, prefs: UserPreferences): Promise<void> {
-  if (!prefs.notificationsEnabled) return;
   const status = entry.status as FinalStatus;
-  if (!prefs[PREF_KEY_MAP[status]]) return;
+  if (!prefs.notificationsEnabled || !prefs[PREF_KEY_MAP[status]]) {
+    debugLog('background', 'notification-suppressed', {
+      status,
+      reason: prefs.notificationsEnabled ? `${PREF_KEY_MAP[status]} is off` : 'all notifications off',
+    });
+    return;
+  }
   await i18nReady();
   const typeLabel   = t(TYPE_KEY[entry.type]   ?? 'notif_type_application');
   const action      = t(ACTION_KEY[entry.type]  ?? 'notif_action_deployment');
@@ -66,4 +72,5 @@ export async function createNotification(entry: DeploymentEntry, prefs: UserPref
     requireInteraction: false,
   };
   chrome.notifications.create(`deployment-${entry.id}`, options);
+  debugLog('background', 'notification-shown', { title: options.title, message: options.message });
 }

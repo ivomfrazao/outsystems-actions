@@ -7,6 +7,10 @@ import { registerMessageRouter } from './router';
 import { registerLifecycleListeners } from './lifecycle';
 import { initI18n, loadLanguagePreference, SUPPORTED_LOCALES } from '../shared/i18n';
 import type { SupportedLocale } from '../shared/i18n';
+import { debugLog } from './debug-log';
+
+// Logged on every worker wake-up; helps correlate state loss after restarts.
+debugLog('background', 'worker-started');
 
 loadLanguagePreference().then(lang => initI18n(lang));
 

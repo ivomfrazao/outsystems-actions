@@ -63,5 +63,13 @@
   "about_feedback": "Feedback",
   "about_report_bug": "Report a bug",
   "about_suggest_feature": "Suggest a feature",
-  "about_feedback_hint": "Both open a pre-filled GitHub issue. A GitHub account is required."
+  "about_feedback_hint": "Both open a pre-filled GitHub issue. A GitHub account is required.",
+  "about_diagnostics": "Diagnostics",
+  "about_debug_logging": "Debug logging",
+  "about_log_entries": "Log entries",
+  "about_log_download": "Download",
+  "about_log_copy": "Copy",
+  "about_log_copied": "Copied",
+  "about_log_clear": "Delete log",
+  "about_debug_hint": "Turn on, reproduce the problem, then attach the downloaded log to your issue. Logs stay on this device until you delete them, including after turning logging off. They include server, environment and module names, so review them before sharing."
 }

@@ -4,7 +4,7 @@ import { DeploymentStatus } from '../../shared/types';
 import { getDeployments, setDeployments, sameDeploymentUrl } from './store';
 
 export type UpdateOutcome =
-  | { kind: 'noop' }
+  | { kind: 'noop'; reason: 'unchanged' | 'already-recorded' }
   | { kind: 'name-patch' }
   | { kind: 'in-progress' }
   | { kind: 'final'; entry: DeploymentEntry };
@@ -29,7 +29,7 @@ export function applyDeploymentUpdate(
   }
 
   // No-op: same status, name already known.
-  if (existing && existing.status === payload.status) return { kind: 'noop' };
+  if (existing && existing.status === payload.status) return { kind: 'noop', reason: 'unchanged' };
 
   // Skip: first InProgress for a URL that already has a conclusive history entry.
   // Unknown entries are not conclusive — the user may be reopening to resolve one.
@@ -39,7 +39,7 @@ export function applyDeploymentUpdate(
            d.status !== DeploymentStatus.InProgress &&
            d.status !== DeploymentStatus.Unknown
     );
-    if (hasConclusive) return { kind: 'noop' };
+    if (hasConclusive) return { kind: 'noop', reason: 'already-recorded' };
   }
 
   // Remove stale entries for the same URL tracked in other tabs (e.g. user opened
@@ -123,7 +123,7 @@ export function applyDeploymentUpdate(
   );
   if (hasConclusive) {
     setDeployments(current);
-    return { kind: 'noop' };
+    return { kind: 'noop', reason: 'already-recorded' };
   }
 
   const finalEntry: DeploymentEntry = {

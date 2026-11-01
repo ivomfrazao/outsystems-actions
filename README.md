@@ -45,6 +45,17 @@ Bugs and feature requests are tracked in [GitHub Issues](https://github.com/ivom
 
 The **Report a bug** and **Suggest a feature** links in Settings → About open the same forms, pre-filled with your extension version and browser.
 
+### Attaching a debug log
+
+Most problems come down to the extension misreading a Service Center or LifeTime page. A debug log shows what it detected and why:
+
+1. Open Settings → About and turn on **Debug logging**.
+2. Reproduce the problem (e.g. run the publish or deployment again).
+3. Click **Download** and attach the `.json` file to your issue.
+4. Turn debug logging off again if you like, and **Clear** the log.
+
+The log keeps the most recent 500 entries. It records page URLs and titles, server, environment and module names, detected statuses and notification decisions, plus your extension settings. Review it before sharing if any of that is sensitive. Nothing is sent anywhere automatically.
+
 ## Development
 
 ```bash

@@ -6,6 +6,7 @@ import { getDeployments, setDeployments, saveDeployments } from './deployments/s
 import { handleDeploymentUpdate } from './deployments/handler';
 import { handleUpdatePreferences } from './preferences/handler';
 import { clearBadge } from './notifications';
+import { debugLog, clearDebugLog } from './debug-log';
 
 function openByUrl(url: string): void {
   chrome.tabs.query({}, (tabs) => {
@@ -76,6 +77,12 @@ export function registerMessageRouter(getPreferences: () => UserPreferences): vo
         break;
       case 'openDeployment':
         openDeploymentUrl(message.payload.url, message.payload.tabId);
+        break;
+      case 'debugLog':
+        debugLog('content', message.payload.event, message.payload.data, sender.tab?.id);
+        break;
+      case 'clearDebugLog':
+        clearDebugLog();
         break;
       case 'deleteDeployment': {
         const { id } = message.payload;

@@ -63,5 +63,13 @@
   "about_feedback": "Feedback",
   "about_report_bug": "Reportar um erro",
   "about_suggest_feature": "Sugerir uma funcionalidade",
-  "about_feedback_hint": "Ambos abrem um issue pré-preenchido no GitHub. É necessária uma conta GitHub."
+  "about_feedback_hint": "Ambos abrem um issue pré-preenchido no GitHub. É necessária uma conta GitHub.",
+  "about_diagnostics": "Diagnóstico",
+  "about_debug_logging": "Registo de depuração",
+  "about_log_entries": "Entradas no registo",
+  "about_log_download": "Transferir",
+  "about_log_copy": "Copiar",
+  "about_log_copied": "Copiado",
+  "about_log_clear": "Eliminar registo",
+  "about_debug_hint": "Ative, reproduza o problema e anexe o registo transferido ao seu issue. Os registos ficam neste dispositivo até os eliminar, mesmo depois de desativar o registo. Incluem nomes de servidores, ambientes e módulos; reveja-os antes de partilhar."
 }

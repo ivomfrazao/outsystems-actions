@@ -26,9 +26,9 @@ function markAsUnknown(
   });
 }
 
-export function registerLifecycleListeners(getPreferences: () => UserPreferences): void {
+export function registerLifecycleListeners(getPreferences: () => UserPreferences, stateReady: Promise<void>): void {
   chrome.tabs.onRemoved.addListener((tabId: number) => {
-    chrome.storage.local.get(
+    void stateReady.then(() => chrome.storage.local.get(
       [STORAGE_KEYS.deployments],
       (result: { deployments?: DeploymentEntry[] }) => {
         const stored = result.deployments ?? getDeployments();
@@ -44,11 +44,11 @@ export function registerLifecycleListeners(getPreferences: () => UserPreferences
         debugLog('background', 'marked-unknown', { trigger: 'tab closed' }, tabId);
         // Unknown notifications only fire at browser startup, not on tab close.
       }
-    );
+    ));
   });
 
   chrome.runtime.onStartup.addListener(() => {
-    chrome.storage.local.get(
+    void stateReady.then(() => chrome.storage.local.get(
       [STORAGE_KEYS.deployments, STORAGE_KEYS.preferences],
       (result: { deployments?: DeploymentEntry[]; preferences?: UserPreferences }) => {
         if (result.preferences) setPreferences(result.preferences);
@@ -69,6 +69,6 @@ export function registerLifecycleListeners(getPreferences: () => UserPreferences
           createNotification(entry, getPreferences());
         }
       }
-    );
+    ));
   });
 }

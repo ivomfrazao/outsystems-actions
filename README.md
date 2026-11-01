@@ -34,6 +34,16 @@ To install manually from source:
 - The extension will automatically monitor for deployments.
 - Notifications will appear for final states based on your preferences.
 - Click the extension icon to view recent history and adjust settings.
+- Settings → About shows the installed version and links to the repository, release notes and issue forms.
+
+## Feedback & bug reports
+
+Bugs and feature requests are tracked in [GitHub Issues](https://github.com/ivomfrazao/outsystems-actions/issues):
+
+- [Report a bug](https://github.com/ivomfrazao/outsystems-actions/issues/new?labels=bug)
+- [Suggest a feature](https://github.com/ivomfrazao/outsystems-actions/issues/new?labels=enhancement)
+
+The **Report a bug** and **Suggest a feature** links in Settings → About open the same forms, pre-filled with your extension version and browser.
 
 ## Development
 

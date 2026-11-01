@@ -10,6 +10,7 @@
   "tab_notifications": "Notificações",
   "tab_history": "Histórico",
   "tab_appearance": "Aparência",
+  "tab_about": "Sobre",
 
   "pref_all_notifications": "Todas as Notificações",
   "pref_notify_success": "Sucesso",
@@ -55,5 +56,12 @@
   "notif_status_unknown": "Resultado Desconhecido",
   "notif_name_unknown": "Desconhecido",
   "notif_message": "{name} em {environment} às {time}",
-  "notif_env_unknown": "Desconhecido"
+  "notif_env_unknown": "Desconhecido",
+
+  "about_repo": "Código-fonte no GitHub",
+  "about_changelog": "Notas de versão",
+  "about_feedback": "Feedback",
+  "about_report_bug": "Reportar um erro",
+  "about_suggest_feature": "Sugerir uma funcionalidade",
+  "about_feedback_hint": "Ambos abrem um issue pré-preenchido no GitHub. É necessária uma conta GitHub."
 }

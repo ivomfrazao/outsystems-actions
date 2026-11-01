@@ -10,6 +10,7 @@
   "tab_notifications": "Notifications",
   "tab_history": "History",
   "tab_appearance": "Appearance",
+  "tab_about": "About",
 
   "pref_all_notifications": "All Notifications",
   "pref_notify_success": "Success",
@@ -55,5 +56,12 @@
   "notif_status_unknown": "Outcome Unknown",
   "notif_name_unknown": "Unknown",
   "notif_message": "{name} in {environment} at {time}",
-  "notif_env_unknown": "Unknown"
+  "notif_env_unknown": "Unknown",
+
+  "about_repo": "Source code on GitHub",
+  "about_changelog": "Release notes",
+  "about_feedback": "Feedback",
+  "about_report_bug": "Report a bug",
+  "about_suggest_feature": "Suggest a feature",
+  "about_feedback_hint": "Both open a pre-filled GitHub issue. A GitHub account is required."
 }

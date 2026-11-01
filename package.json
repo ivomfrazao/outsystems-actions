@@ -1,6 +1,6 @@
 {
   "name": "outsystems-actions",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Chrome extension that monitors OutSystems deployments",
   "scripts": {

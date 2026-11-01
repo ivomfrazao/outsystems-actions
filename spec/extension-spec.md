@@ -417,7 +417,6 @@ The extension requires:
 
 - `notifications` — for browser notifications
 - `tabs` — for tab focus and querying
-- `scripting` — for dynamic script injection
 - `storage` — for `chrome.storage.local` (all deployment state and preferences)
 - Host permissions for Service Center and LifeTime domains
 

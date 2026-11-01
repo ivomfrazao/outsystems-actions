@@ -79,11 +79,10 @@ git push origin main --tags
 Then build and package for store submission:
 
 ```bash
-npm run build
-cd dist && zip -r ../extension.zip .
+npm run package                 # builds and creates dist.zip (needs python3)
 ```
 
-Upload `extension.zip` manually to the [Edge Add-ons Partner Center](https://partner.microsoft.com/en-us/dashboard/microsoftedge) and submit for review.
+Upload `dist.zip` manually to the [Edge Add-ons Partner Center](https://partner.microsoft.com/en-us/dashboard/microsoftedge) and submit for review.
 
 ## Files
 

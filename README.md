@@ -99,7 +99,7 @@ Upload `dist.zip` manually to the [Edge Add-ons Partner Center](https://partner.
 ## Notes
 
 - Tested on Chromium-based browsers.
-- Permissions required: notifications, storage, tabs, scripting, host access to Service Center and LifeTime domains.
+- Permissions required: notifications, storage, tabs, host access to Service Center and LifeTime domains.
 
 ## Disclaimer
 

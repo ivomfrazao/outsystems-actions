@@ -21,6 +21,10 @@
 
   "pref_max_deployments": "Max deployments",
   "pref_max_days": "Max days",
+  "history_confirm_one": "This deletes {count} entry from history.",
+  "history_confirm_other": "This deletes {count} entries from history.",
+  "history_cancel": "Cancel",
+  "history_apply": "Apply",
 
   "pref_dark_mode": "Dark Mode",
   "pref_dark_mode_light": "Light",

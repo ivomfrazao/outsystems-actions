@@ -4,8 +4,21 @@ export const SUPPORTED_LOCALES: readonly SupportedLocale[] = ['en', 'pt'];
 export const DEFAULT_LOCALE: SupportedLocale = 'en';
 
 let messages: Record<string, string> = {};
+let loading: Promise<void> = Promise.resolve();
 
-export async function initI18n(locale: SupportedLocale = DEFAULT_LOCALE): Promise<void> {
+export function initI18n(locale: SupportedLocale = DEFAULT_LOCALE): Promise<void> {
+  loading = loadMessages(locale);
+  return loading;
+}
+
+// Resolves once the most recent initI18n call has finished. The service worker
+// is woken by the very event that triggers a notification, so callers outside
+// the popup must await this before calling t().
+export function i18nReady(): Promise<void> {
+  return loading;
+}
+
+async function loadMessages(locale: SupportedLocale): Promise<void> {
   try {
     const res = await fetch(chrome.runtime.getURL(`locales/${locale}.json`));
     messages = await res.json() as Record<string, string>;
@@ -17,8 +30,11 @@ export async function initI18n(locale: SupportedLocale = DEFAULT_LOCALE): Promis
   }
 }
 
-export function t(key: string): string {
-  return messages[key] ?? key;
+// Replaces {name} placeholders with values from params.
+export function t(key: string, params?: Record<string, string>): string {
+  const text = messages[key] ?? key;
+  if (!params) return text;
+  return text.replace(/\{(\w+)\}/g, (match, name: string) => params[name] ?? match);
 }
 
 // Walks all [data-i18n] elements and sets their textContent from the loaded locale.

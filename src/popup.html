@@ -373,6 +373,20 @@
     a.pref:hover { background: var(--c-btn-bg); }
     a.pref:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
     .pref__arrow { color: var(--c-text-muted); font-size: 12px; }
+    .pref__actions { display: flex; gap: 6px; }
+    .btn {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--c-text-secondary);
+      background: var(--c-btn-bg);
+      border: 1px solid var(--c-btn-border);
+      border-radius: 4px;
+      padding: 3px 8px;
+      transition: background 0.1s;
+    }
+    .btn:hover:not(:disabled) { background: var(--c-btn-hover); }
+    .btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: 1px; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .hint {
       font-size: 11px;
       color: var(--c-text-muted);
@@ -643,6 +657,32 @@
           </div>
         </div>
         <p class="hint" data-i18n="about_feedback_hint">Both open a pre-filled GitHub issue. A GitHub account is required.</p>
+        <div class="section">
+          <div class="section__header">
+            <span class="section__title" data-i18n="about_diagnostics">Diagnostics</span>
+          </div>
+          <div class="section__body">
+            <div class="pref">
+              <span class="pref__label" data-i18n="about_debug_logging">Debug logging</span>
+              <label class="toggle">
+                <input type="checkbox" id="debugLogging">
+                <span class="toggle__track"></span>
+              </label>
+            </div>
+            <div class="pref">
+              <span class="pref__label" data-i18n="about_log_entries">Log entries</span>
+              <span class="pref__value" id="debugLogCount">0</span>
+            </div>
+            <div class="pref">
+              <div class="pref__actions">
+                <button class="btn" id="debugLogDownload" data-i18n="about_log_download">Download</button>
+                <button class="btn" id="debugLogCopy" data-i18n="about_log_copy">Copy</button>
+              </div>
+              <button class="btn" id="debugLogClear" data-i18n="about_log_clear">Delete log</button>
+            </div>
+          </div>
+        </div>
+        <p class="hint" data-i18n="about_debug_hint">Turn on, reproduce the problem, then attach the downloaded log to your issue. Logs stay on this device until you delete them, including after turning logging off. They include server, environment and module names, so review them before sharing.</p>
       </div>
 
     </section>

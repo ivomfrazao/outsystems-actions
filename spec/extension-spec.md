@@ -348,6 +348,13 @@ Only the active mode is enforced. Changing the mode or the value applies immedia
 
 Settings → About shows the installed version (from the manifest) and links to the GitHub repository, its releases page, and pre-filled issue forms for bug reports (`bug` label) and feature requests (`enhancement` label). Issue bodies include the extension version and user agent, and are always in English.
 
+**Debug logging** — off by default; stored as a boolean in `chrome.storage.local` under `debugLogging`. When on, the background worker appends entries to `debugLog` (most recent 500 kept). The background is the only writer; content scripts send entries via a `debugLog` message. Entries record:
+
+- content: page detected/ignored (URL, title), each change in detected status and the matching signal, each non-keepalive update sent with extracted metadata
+- background: worker start, how each update was handled (keepalives omitted), notifications shown or suppressed and why, entries marked Unknown
+
+**Download** / **Copy** export a JSON document with the version, user agent, language, preferences, current deployments and all log entries. **Delete log** empties the log (via a `clearDebugLog` message). Turning logging off keeps existing entries until they are deleted.
+
 ---
 
 ## 8. Architecture

@@ -4,6 +4,7 @@ import { POLL_INTERVAL_MS } from '../shared/constants';
 import { detectPageType } from './page-detector';
 import { detectStatus } from './status-detector';
 import { extractMetadata, extractTimestamps } from './metadata-extractor';
+import { debugLog } from './debug-log';
 
 const STATUS_INDICATORS: Record<DeploymentStatus, string> = {
   [Status.InProgress]:   '🔵',
@@ -23,6 +24,7 @@ let currentStatus: DeploymentStatus | null = null;
 let startTime: string | null               = null;
 let endTime: string | null                 = null;
 let pollsSinceLastSend                     = 0;
+let lastDetection: string | null           = null;
 
 // Resend current status every ~20 s even if unchanged, to keep the service
 // worker alive and session storage current after a worker restart.
@@ -41,7 +43,7 @@ function updateTabTitle(status: DeploymentStatus): void {
 
 // ── Send ──────────────────────────────────────────────────────────────────────
 
-function sendUpdate(status: DeploymentStatus): void {
+function sendUpdate(status: DeploymentStatus, keepalive: boolean): void {
   const { name, environment, server } = extractMetadata(originalTitle, deploymentType);
   const timestamps = extractTimestamps();
 
@@ -77,6 +79,9 @@ function sendUpdate(status: DeploymentStatus): void {
     () => { void chrome.runtime.lastError; }
   );
   pollsSinceLastSend = 0;
+  if (!keepalive) {
+    debugLog('update-sent', { status, name, environment, server, startTime, endTime });
+  }
 }
 
 // ── Poll ──────────────────────────────────────────────────────────────────────
@@ -84,10 +89,20 @@ function sendUpdate(status: DeploymentStatus): void {
 function checkForUpdates(): void {
   if (!deploymentType) return;
 
-  const status = detectStatus();
+  const detection = detectStatus();
   pollsSinceLastSend++;
 
-  if (!status) return;
+  // Log only when the detection outcome changes, not on every poll.
+  const detectionKey = detection ? `${detection.status}|${detection.reason}` : null;
+  if (detectionKey !== lastDetection) {
+    debugLog('status-detected', detection
+      ? { status: detection.status, reason: detection.reason }
+      : { status: null, reason: 'no status signal on page' });
+    lastDetection = detectionKey;
+  }
+
+  if (!detection) return;
+  const status = detection.status;
 
   const changed   = status !== currentStatus;
   const keepalive = status === Status.InProgress && pollsSinceLastSend >= KEEPALIVE_POLLS;
@@ -95,11 +110,16 @@ function checkForUpdates(): void {
   if (changed || keepalive) {
     currentStatus = status;
     updateTabTitle(status);
-    sendUpdate(status);
+    sendUpdate(status, keepalive && !changed);
   }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 extractMetadata(originalTitle, deploymentType);
+debugLog(deploymentType ? 'page-detected' : 'page-ignored', {
+  deploymentType,
+  url:   window.location.href,
+  title: originalTitle,
+});
 setInterval(checkForUpdates, POLL_INTERVAL_MS);

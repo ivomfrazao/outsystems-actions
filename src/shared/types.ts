@@ -17,6 +17,14 @@ export type DeploymentStatus = (typeof DeploymentStatus)[keyof typeof Deployment
 
 export type FinalStatus = Exclude<DeploymentStatus, typeof DeploymentStatus.InProgress>;
 
+export interface DebugLogEntry {
+  time: number;
+  source: 'content' | 'background';
+  event: string;
+  tabId?: number;
+  data?: Record<string, unknown>;
+}
+
 export interface DeploymentEntry {
   id: string;
   type: DeploymentType;

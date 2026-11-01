@@ -10,7 +10,13 @@ const STATUS_KEYWORDS = {
   [Status.Unknown]:      [],
 } as const satisfies Record<DeploymentStatus, ReadonlyArray<string>>;
 
-export function detectStatus(): DeploymentStatus | null {
+export interface StatusDetection {
+  status: DeploymentStatus;
+  // Which signal matched, recorded in the debug log.
+  reason: string;
+}
+
+export function detectStatus(): StatusDetection | null {
   // Use textContent (not innerText) for final-state detection: eSpace publish
   // stores the "successfully published" message in a collapsed sub-step row
   // (display:none), which innerText skips. textContent includes all DOM text
@@ -28,20 +34,21 @@ export function detectStatus(): DeploymentStatus | null {
     Status.Error,
     Status.Intervention,
   ];
-  const finalStatus = finalOrder.find(s =>
-    STATUS_KEYWORDS[s].some(kw => bodyAllText.includes(kw))
-  );
-  if (finalStatus) return finalStatus;
+  for (const status of finalOrder) {
+    const keyword = STATUS_KEYWORDS[status].find(kw => bodyAllText.includes(kw));
+    if (keyword) return { status, reason: `keyword "${keyword}"` };
+  }
 
   // Progress bar without the stopped class = publish actively running.
   if (document.querySelector('.progress-bar:not(.progress-bar-stopped)')) {
-    return Status.InProgress;
+    return { status: Status.InProgress, reason: 'active progress bar' };
   }
 
   // Fallback keyword check for LifeTime or other non-ServiceCenter pages
   // that don't use the same progress bar markup.
-  if (STATUS_KEYWORDS[Status.InProgress].some(kw => bodyText.includes(kw))) {
-    return Status.InProgress;
+  const keyword = STATUS_KEYWORDS[Status.InProgress].find(kw => bodyText.includes(kw));
+  if (keyword) {
+    return { status: Status.InProgress, reason: `visible keyword "${keyword}"` };
   }
 
   return null;

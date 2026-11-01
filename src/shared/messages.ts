@@ -34,6 +34,13 @@ export interface DeleteDeploymentMessage {
   payload: { id: string };
 }
 
+export interface DebugLogMessage {
+  type: 'debugLog';
+  payload: { event: string; data?: Record<string, unknown> };
+}
+
+export interface ClearDebugLogMessage { type: 'clearDebugLog'; }
+
 export interface DeploymentsResponseMessage {
   type: 'deploymentsResponse';
   payload: { deployments: DeploymentEntry[] };
@@ -53,7 +60,9 @@ export type BackgroundInboundMessage =
   | UpdatePreferencesMessage
   | ClearBadgeMessage
   | OpenDeploymentMessage
-  | DeleteDeploymentMessage;
+  | DeleteDeploymentMessage
+  | DebugLogMessage
+  | ClearDebugLogMessage;
 
 export type PopupResponseMessage =
   | DeploymentsResponseMessage

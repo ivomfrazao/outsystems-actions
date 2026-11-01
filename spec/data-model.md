@@ -93,6 +93,23 @@ Value: `"on"` | `"off"` | `"system"`. Default (when absent): `"system"`.
 
 Legacy boolean values (`true` / `false`) are migrated on read to `"on"` / `"off"`.
 
+### Debug Log
+
+Stored in `chrome.storage.local`, separate from `UserPreferences`:
+
+- `debugLogging` — `boolean`, default (when absent) `false`.
+- `debugLog` — `DebugLogEntry[]`, oldest first, capped at 500.
+
+```typescript
+interface DebugLogEntry {
+  time: number;                       // epoch ms
+  source: 'content' | 'background';
+  event: string;                      // e.g. 'status-detected', 'notification-suppressed'
+  tabId?: number;
+  data?: Record<string, unknown>;
+}
+```
+
 ---
 
 ## 4. Active Deployments (Background Worker State)

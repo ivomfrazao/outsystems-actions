@@ -2,3 +2,7 @@ dist/
 node_modules/
 examples/
 dist.zip
+
+# Chrome "Pack extension" output; the .pem is a private signing key
+*.crx
+*.pem

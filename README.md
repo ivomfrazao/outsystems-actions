@@ -88,13 +88,14 @@ Upload `extension.zip` manually to the [Edge Add-ons Partner Center](https://par
 ## Files
 
 - `src/manifest.json` — extension configuration
-- `src/background.ts` — service worker for notifications and state management
-- `src/content.ts` — content script for status detection
-- `src/popup.ts` / `src/popup.html` — popup UI and logic
-- `src/types.ts` — shared TypeScript types
+- `src/background/` — service worker: message routing, deployment state and history, notifications, badge, debug log
+- `src/content/` — content script: page detection, status detection, metadata extraction
+- `src/popup.html` / `src/popup/` — popup UI: process list and settings tabs (Notifications, History, Appearance, About)
+- `src/shared/` — types, messages, constants, i18n and history-limit logic shared across the above
+- `src/locales/` — UI strings per language (`en.json`, `pt.json`)
 - `src/icons/` — icon files (16, 32, 48, 128 px PNG)
 - `scripts/bump-version.mjs` — version sync script
-- `spec/` — specification documents
+- `spec/` — specification documents and ADRs
 
 ## Notes
 

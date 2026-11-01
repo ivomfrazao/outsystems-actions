@@ -105,8 +105,8 @@ Response:
     "notifyIntervention": true,
     "animationsEnabled":  true,
     "historyLimitType":   "count",
-    "historyMaxCount":    5,
-    "historyMaxDays":     1
+    "historyMaxCount":    20,
+    "historyMaxDays":     7
   }
 }
 ```

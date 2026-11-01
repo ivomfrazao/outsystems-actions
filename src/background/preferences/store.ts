@@ -10,8 +10,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   notifyUnknown:        true,
   animationsEnabled:    true,
   historyLimitType:     'count',
-  historyMaxCount:      5,
-  historyMaxDays:       1,
+  historyMaxCount:      20,
+  historyMaxDays:       7,
 };
 
 let userPreferences: UserPreferences = { ...DEFAULT_PREFERENCES };

@@ -25,8 +25,8 @@ function readForm(): HistoryLimits {
   ) as 'count' | 'days';
   return {
     historyLimitType: limitType,
-    historyMaxCount:  parseInt((document.getElementById('historyMaxCount') as HTMLInputElement)?.value ?? '5', 10) || committed.historyMaxCount,
-    historyMaxDays:   parseInt((document.getElementById('historyMaxDays')  as HTMLInputElement)?.value ?? '1', 10) || committed.historyMaxDays,
+    historyMaxCount:  parseInt((document.getElementById('historyMaxCount') as HTMLInputElement)?.value ?? '', 10) || committed.historyMaxCount,
+    historyMaxDays:   parseInt((document.getElementById('historyMaxDays')  as HTMLInputElement)?.value ?? '', 10) || committed.historyMaxDays,
   };
 }
 

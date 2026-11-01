@@ -148,8 +148,8 @@
 
 - [ ] Settings panel shows two radio options: "Max deployments" and "Max days".
 - [ ] Selecting a radio enables its associated number input and disables the other.
-- [ ] "Max deployments" input: integer, range 1–100, default 5.
-- [ ] "Max days" input: integer, range 1–365, default 1.
+- [ ] "Max deployments" input: integer, range 1–100, default 20.
+- [ ] "Max days" input: integer, range 1–365, default 7.
 - [ ] Default mode on first install is "Max deployments".
 - [ ] Changing the mode or value immediately enforces the new limit on existing history.
 - [ ] History limit settings persist across browser sessions.

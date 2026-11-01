@@ -1,6 +1,6 @@
 import type { DeploymentEntry, FinalStatus, UserPreferences } from '../shared/types';
 import { DeploymentStatus, DeploymentType } from '../shared/types';
-import { t } from '../shared/i18n';
+import { t, i18nReady } from '../shared/i18n';
 
 const PREF_KEY_MAP = {
   [DeploymentStatus.Success]:      'notifySuccess',
@@ -48,10 +48,11 @@ export function clearBadge(): void {
   chrome.action.setBadgeText({ text: '' });
 }
 
-export function createNotification(entry: DeploymentEntry, prefs: UserPreferences): void {
+export async function createNotification(entry: DeploymentEntry, prefs: UserPreferences): Promise<void> {
   if (!prefs.notificationsEnabled) return;
   const status = entry.status as FinalStatus;
   if (!prefs[PREF_KEY_MAP[status]]) return;
+  await i18nReady();
   const typeLabel   = t(TYPE_KEY[entry.type]   ?? 'notif_type_application');
   const action      = t(ACTION_KEY[entry.type]  ?? 'notif_action_deployment');
   const statusLabel = t(STATUS_KEY[status]);
@@ -61,7 +62,7 @@ export function createNotification(entry: DeploymentEntry, prefs: UserPreference
     type:               'basic',
     iconUrl:            'icons/icon-48.png',
     title:              `${typeLabel} ${action} ${statusLabel}`,
-    message:            `${name} in ${environment} at ${new Date(entry.timestamp).toLocaleTimeString()}`,
+    message:            t('notif_message', { name, environment, time: new Date(entry.timestamp).toLocaleTimeString() }),
     requireInteraction: false,
   };
   chrome.notifications.create(`deployment-${entry.id}`, options);

@@ -54,5 +54,6 @@
   "notif_status_intervention": "Requer Intervenção",
   "notif_status_unknown": "Resultado Desconhecido",
   "notif_name_unknown": "Desconhecido",
+  "notif_message": "{name} em {environment} às {time}",
   "notif_env_unknown": "Desconhecido"
 }

@@ -4,6 +4,7 @@ import type { PopupResponseMessage } from '../../shared/messages';
 import { initNotificationsTab } from './notifications';
 import { initHistoryTab } from './history';
 import { initAppearanceTab } from './appearance';
+import { initAboutTab } from './about';
 
 function showSettingsTab(tab: string): void {
   document.querySelectorAll<HTMLElement>('[data-settings-pane]').forEach(pane => {
@@ -46,6 +47,7 @@ function saveCurrentPreferences(): void {
 export function initSettings(currentLang: SupportedLocale): void {
   showSettingsTab('notifications');
   initSettingsTabNav();
+  initAboutTab();
 
   chrome.runtime.sendMessage({ type: 'getPreferences' }, (response: PopupResponseMessage) => {
     if (response?.type !== 'preferencesResponse') return;

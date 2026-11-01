@@ -363,6 +363,23 @@
     }
     .pref__select:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
 
+    /* ── About tab ── */
+    .pref__value {
+      font-size: 12px;
+      color: var(--c-text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+    a.pref { color: inherit; }
+    a.pref:hover { background: var(--c-btn-bg); }
+    a.pref:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+    .pref__arrow { color: var(--c-text-muted); font-size: 12px; }
+    .hint {
+      font-size: 11px;
+      color: var(--c-text-muted);
+      line-height: 1.4;
+      padding: 0 2px;
+    }
+
     /* ── CSS-only toggle switch ── */
     .toggle {
       position: relative;
@@ -491,6 +508,7 @@
         <button class="settings-tab settings-tab--active" data-settings-tab="notifications" data-i18n="tab_notifications">Notifications</button>
         <button class="settings-tab" data-settings-tab="history" data-i18n="tab_history">History</button>
         <button class="settings-tab" data-settings-tab="appearance" data-i18n="tab_appearance">Appearance</button>
+        <button class="settings-tab" data-settings-tab="about" data-i18n="tab_about">About</button>
       </div>
 
       <div class="settings-pane" data-settings-pane="notifications">
@@ -590,6 +608,41 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="settings-pane settings-pane--hidden" data-settings-pane="about">
+        <div class="section">
+          <div class="section__body">
+            <div class="pref">
+              <span class="pref__label pref__label--strong" data-i18n="header_title">OutSystems Actions</span>
+              <span class="pref__value" id="aboutVersion"></span>
+            </div>
+            <a class="pref" id="aboutRepo" target="_blank" rel="noopener">
+              <span class="pref__label" data-i18n="about_repo">Source code on GitHub</span>
+              <span class="pref__arrow">&#8599;</span>
+            </a>
+            <a class="pref" id="aboutChangelog" target="_blank" rel="noopener">
+              <span class="pref__label" data-i18n="about_changelog">Release notes</span>
+              <span class="pref__arrow">&#8599;</span>
+            </a>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section__header">
+            <span class="section__title" data-i18n="about_feedback">Feedback</span>
+          </div>
+          <div class="section__body">
+            <a class="pref" id="aboutBug" target="_blank" rel="noopener">
+              <span class="pref__label" data-i18n="about_report_bug">Report a bug</span>
+              <span class="pref__arrow">&#8599;</span>
+            </a>
+            <a class="pref" id="aboutFeature" target="_blank" rel="noopener">
+              <span class="pref__label" data-i18n="about_suggest_feature">Suggest a feature</span>
+              <span class="pref__arrow">&#8599;</span>
+            </a>
+          </div>
+        </div>
+        <p class="hint" data-i18n="about_feedback_hint">Both open a pre-filled GitHub issue. A GitHub account is required.</p>
       </div>
 
     </section>

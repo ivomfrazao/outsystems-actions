@@ -344,6 +344,10 @@ The user selects one limit mode (see §6.1) and sets the corresponding value:
 
 Only the active mode is enforced. Changing the mode or the value applies immediately to existing history.
 
+### 7.5 About & Diagnostics
+
+Settings → About shows the installed version (from the manifest) and links to the GitHub repository, its releases page, and pre-filled issue forms for bug reports (`bug` label) and feature requests (`enhancement` label). Issue bodies include the extension version and user agent, and are always in English.
+
 ---
 
 ## 8. Architecture

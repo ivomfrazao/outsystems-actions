@@ -69,8 +69,8 @@ Source files live in `src/` (TypeScript). The `dist/` folder is the build output
 ## Releasing
 
 ```bash
-npm run bump 1.1.0              # sync version in package.json and src/manifest.json
-git add package.json src/manifest.json
+npm run bump 1.1.0              # sync version in package.json, package-lock.json and src/manifest.json
+git add package.json package-lock.json src/manifest.json
 git commit -m "chore: bump to v1.1.0"
 git tag v1.1.0
 git push origin main --tags

@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.2.0 — 2026-11-01
+
+### Added
+
+- **About tab** — Settings → About shows the installed version and links to the GitHub repository, release notes, and pre-filled forms to report a bug or suggest a feature.
+- **Debug logging** — an opt-in switch in Settings → About records what the extension detects on Service Center and LifeTime pages and how it handles each update. The log can be downloaded or copied to attach to a bug report, and stays on the device until deleted.
+
+### Changed
+
+- **History limit changes need confirmation** — changes in Settings → History are no longer applied immediately. **Apply** becomes available once a value changes, and a message shows how many entries will be deleted.
+- **Larger default history limits** — 20 entries or 7 days (previously 5 entries or 1 day). Existing saved settings are not changed.
+
+### Fixed
+
+- Browser notifications could show translation keys (e.g. `notif_type_module`) instead of text. The notification body is now also translated.
+- After the browser idled, the first event could be handled before saved state had loaded, which could overwrite history, ignore notification filters, or show default settings in the popup.
+- Module publishes now show the correct module name and label.
+
+---
+
 ## 1.1.0 — 2026-06-02
 
 ### Added

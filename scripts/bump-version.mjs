@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Usage: node scripts/bump-version.mjs <version>
 // Example: node scripts/bump-version.mjs 1.2.0
-// Updates version in both package.json and src/manifest.json.
+// Updates version in package.json, package-lock.json and src/manifest.json.
 
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
@@ -24,6 +24,11 @@ function updateJson(filePath, updater) {
 }
 
 updateJson('package.json', (pkg) => { pkg.version = version; });
+
+updateJson('package-lock.json', (lock) => {
+  lock.version = version;
+  if (lock.packages?.['']) lock.packages[''].version = version;
+});
 
 // Chrome manifest accepts "1.2.3" or "1.2" but not "1.2.3.0"-style extras.
 updateJson('src/manifest.json', (manifest) => { manifest.version = version; });

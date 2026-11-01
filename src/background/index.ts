@@ -26,8 +26,11 @@ chrome.storage.onChanged.addListener((changes) => {
 
 // Load persisted state. Also handles one-time migration from the old split
 // storage format (history + pendingDeployments + activeDeployments keys).
-chrome.storage.local.get(
+// Event handlers wait on this: after a worker restart the in-memory state is
+// empty until it resolves, and acting earlier would save that empty state.
+const stateReady = chrome.storage.local.get(
   [STORAGE_KEYS.deployments, STORAGE_KEYS.preferences, 'history', 'pendingDeployments'],
+).then(
   (result: Record<string, unknown>) => {
     if (result[STORAGE_KEYS.preferences]) {
       setPreferences({ ...DEFAULT_PREFERENCES, ...result[STORAGE_KEYS.preferences] as UserPreferences });
@@ -90,5 +93,5 @@ chrome.storage.local.get(
   }
 );
 
-registerMessageRouter(getPreferences);
-registerLifecycleListeners(getPreferences);
+registerMessageRouter(getPreferences, stateReady);
+registerLifecycleListeners(getPreferences, stateReady);

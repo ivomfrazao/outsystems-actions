@@ -1,7 +1,6 @@
 import type { BackgroundInboundMessage, PopupResponseMessage } from '../shared/messages';
-import type { DeploymentEntry, UserPreferences } from '../shared/types';
+import type { UserPreferences } from '../shared/types';
 import { DeploymentStatus } from '../shared/types';
-import { STORAGE_KEYS } from '../shared/constants';
 import { getDeployments, setDeployments, saveDeployments } from './deployments/store';
 import { handleDeploymentUpdate } from './deployments/handler';
 import { handleUpdatePreferences } from './preferences/handler';
@@ -44,68 +43,78 @@ function openDeploymentUrl(url: string, tabId?: number): void {
   openByUrl(url);
 }
 
-export function registerMessageRouter(getPreferences: () => UserPreferences): void {
+function handleMessage(
+  message: BackgroundInboundMessage,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: (response: PopupResponseMessage) => void,
+  getPreferences: () => UserPreferences,
+): void {
+  switch (message.type) {
+    case 'deploymentUpdate':
+      handleDeploymentUpdate(message, sender, getPreferences);
+      break;
+    case 'getDeployments':
+      sendResponse({ type: 'deploymentsResponse', payload: { deployments: getDeployments() } });
+      break;
+    case 'getPreferences':
+      sendResponse({ type: 'preferencesResponse', payload: getPreferences() });
+      break;
+    case 'updatePreferences':
+      handleUpdatePreferences(message);
+      sendResponse({ type: 'preferencesUpdated' });
+      break;
+    case 'clearBadge':
+      clearBadge();
+      break;
+    case 'openDeployment':
+      openDeploymentUrl(message.payload.url, message.payload.tabId);
+      break;
+    case 'debugLog':
+      debugLog('content', message.payload.event, message.payload.data, sender.tab?.id);
+      break;
+    case 'clearDebugLog':
+      clearDebugLog();
+      break;
+    case 'deleteDeployment': {
+      const { id } = message.payload;
+      setDeployments(getDeployments().filter(e => e.id !== id));
+      saveDeployments();
+      break;
+    }
+  }
+}
+
+// Messages that reply via sendResponse; their channel must stay open while
+// the handler waits for the stored state to load.
+const RESPONDING_MESSAGES = new Set<BackgroundInboundMessage['type']>([
+  'getDeployments', 'getPreferences', 'updatePreferences',
+]);
+
+export function registerMessageRouter(getPreferences: () => UserPreferences, stateReady: Promise<void>): void {
   chrome.runtime.onMessage.addListener((
     message: BackgroundInboundMessage,
     sender: chrome.runtime.MessageSender,
     sendResponse: (response: PopupResponseMessage) => void,
-  ): boolean | void => {
-    switch (message.type) {
-      case 'deploymentUpdate':
-        handleDeploymentUpdate(message, sender, getPreferences);
-        break;
-      case 'getDeployments':
-        // Read from storage directly: in-memory deployments may be empty if the
-        // service worker was just restarted and the async init hasn't completed.
-        chrome.storage.local.get(
-          [STORAGE_KEYS.deployments],
-          (result: { deployments?: DeploymentEntry[] }) => {
-            const stored = result.deployments ?? getDeployments();
-            sendResponse({ type: 'deploymentsResponse', payload: { deployments: stored } });
-          }
-        );
-        return true;
-      case 'getPreferences':
-        sendResponse({ type: 'preferencesResponse', payload: getPreferences() });
-        break;
-      case 'updatePreferences':
-        handleUpdatePreferences(message);
-        sendResponse({ type: 'preferencesUpdated' });
-        break;
-      case 'clearBadge':
-        clearBadge();
-        break;
-      case 'openDeployment':
-        openDeploymentUrl(message.payload.url, message.payload.tabId);
-        break;
-      case 'debugLog':
-        debugLog('content', message.payload.event, message.payload.data, sender.tab?.id);
-        break;
-      case 'clearDebugLog':
-        clearDebugLog();
-        break;
-      case 'deleteDeployment': {
-        const { id } = message.payload;
-        setDeployments(getDeployments().filter(e => e.id !== id));
-        saveDeployments();
-        break;
-      }
-    }
+  ): boolean => {
+    void stateReady.then(() => handleMessage(message, sender, sendResponse, getPreferences));
+    return RESPONDING_MESSAGES.has(message.type);
   });
 
   chrome.notifications.onClicked.addListener((notificationId: string) => {
-    if (notificationId.startsWith('deployment-')) {
-      const id    = notificationId.replace(/^deployment-/, '');
-      const entry = getDeployments().find(d => d.id === id);
-      if (entry) {
-        if (entry.status === DeploymentStatus.Unknown) {
-          chrome.action.openPopup?.();
-        } else {
-          openDeploymentUrl(entry.url);
+    void stateReady.then(() => {
+      if (notificationId.startsWith('deployment-')) {
+        const id    = notificationId.replace(/^deployment-/, '');
+        const entry = getDeployments().find(d => d.id === id);
+        if (entry) {
+          if (entry.status === DeploymentStatus.Unknown) {
+            chrome.action.openPopup?.();
+          } else {
+            openDeploymentUrl(entry.url);
+          }
         }
+        clearBadge();
       }
-      clearBadge();
-    }
-    chrome.notifications.clear(notificationId);
+      chrome.notifications.clear(notificationId);
+    });
   });
 }

@@ -162,3 +162,4 @@
 - [ ] Extension works if a page is open long-term.
 - [ ] Extension works across multiple environments simultaneously.
 - [ ] If the service worker restarts mid-deployment (while `in_progress`), the transition to a final state is still detected and notified.
+- [ ] After a service worker restart, the event that woke it is handled against the stored history and preferences: history is never overwritten with an empty list, notifications respect the user's filters, and the popup shows the saved settings.

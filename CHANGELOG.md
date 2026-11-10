@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Consistent status colors** — the tab prefix, popup labels and toolbar badge now use the same color for each status (in progress is blue, warning is yellow, intervention is purple).
+
+---
+
 ## 1.2.1 — 2026-11-01
 
 ### Changed

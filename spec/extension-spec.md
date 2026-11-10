@@ -152,7 +152,7 @@ The content script prefixes the browser tab title with a status indicator as soo
 | success      | 🟢     | Completed successfully       |
 | warning      | 🟡     | Completed with warnings      |
 | error        | 🔴     | Failed                       |
-| intervention | ⚠️     | Waiting for user action      |
+| intervention | 🟣     | Waiting for user action      |
 
 The original title is captured once on script load and reused for metadata extraction, so the emoji prefix never corrupts the deployment name parsed from the title.
 

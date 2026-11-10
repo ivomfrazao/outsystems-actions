@@ -1,6 +1,7 @@
 import type { DeploymentEntry, FinalStatus, UserPreferences } from '../shared/types';
 import { DeploymentStatus, DeploymentType } from '../shared/types';
 import { t, i18nReady } from '../shared/i18n';
+import { STATUS_COLORS } from '../shared/status-style';
 import { debugLog } from './debug-log';
 
 const PREF_KEY_MAP = {
@@ -12,11 +13,11 @@ const PREF_KEY_MAP = {
 } as const satisfies Record<FinalStatus, keyof UserPreferences>;
 
 const BADGE_CONFIG = {
-  [DeploymentStatus.Success]:      { text: '✓', color: '#00FF00' },
-  [DeploymentStatus.Warning]:      { text: '!', color: '#FFFF00' },
-  [DeploymentStatus.Error]:        { text: '!', color: '#FF0000' },
-  [DeploymentStatus.Intervention]: { text: '!', color: '#FF0000' },
-  [DeploymentStatus.Unknown]:      { text: '?', color: '#808080' },
+  [DeploymentStatus.Success]:      { text: '✓', color: STATUS_COLORS[DeploymentStatus.Success] },
+  [DeploymentStatus.Warning]:      { text: '!', color: STATUS_COLORS[DeploymentStatus.Warning] },
+  [DeploymentStatus.Error]:        { text: '!', color: STATUS_COLORS[DeploymentStatus.Error] },
+  [DeploymentStatus.Intervention]: { text: '!', color: STATUS_COLORS[DeploymentStatus.Intervention] },
+  [DeploymentStatus.Unknown]:      { text: '?', color: STATUS_COLORS[DeploymentStatus.Unknown] },
 } as const satisfies Record<FinalStatus, { text: string; color: string }>;
 
 const TYPE_KEY: Record<string, string> = {

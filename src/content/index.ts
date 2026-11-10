@@ -1,19 +1,11 @@
 import type { DeploymentStatus, DeploymentType } from '../shared/types';
 import { DeploymentStatus as Status } from '../shared/types';
 import { POLL_INTERVAL_MS } from '../shared/constants';
+import { STATUS_INDICATORS } from '../shared/status-style';
 import { detectPageType } from './page-detector';
 import { detectStatus } from './status-detector';
 import { extractMetadata, extractTimestamps } from './metadata-extractor';
 import { debugLog } from './debug-log';
-
-const STATUS_INDICATORS: Record<DeploymentStatus, string> = {
-  [Status.InProgress]:   '🔵',
-  [Status.Success]:      '🟢',
-  [Status.Warning]:      '🟡',
-  [Status.Error]:        '🔴',
-  [Status.Intervention]: '⚠️',
-  [Status.Unknown]:      '❓',
-};
 
 // ── State ─────────────────────────────────────────────────────────────────────
 

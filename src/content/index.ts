@@ -66,6 +66,7 @@ function sendUpdate(status: DeploymentStatus, keepalive: boolean): void {
         tabId:     null,
         startTime,
         endTime,
+        date: timestamps.date,
       },
     },
     () => { void chrome.runtime.lastError; }

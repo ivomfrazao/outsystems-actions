@@ -36,6 +36,9 @@ export interface DeploymentEntry {
   timestamp: number;
   startTime: string | null;
   endTime: string | null;
+  // YYYY-MM-DD of the first log entry, when the page's log carries a date.
+  // Display only: `timestamp` still drives ordering and history expiry.
+  date?: string | null;
   tabId?: number;
 }
 

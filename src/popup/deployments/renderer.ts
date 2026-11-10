@@ -104,13 +104,19 @@ function buildCard(entry: DeploymentEntry, isHistory: boolean): HTMLElement {
   }
 
   // Time row: date + start → end times
+  // Prefer the date read from the page's own log; `timestamp` is when the
+  // extension recorded the entry, which can be much later than the run itself.
   const d       = new Date(timestamp);
-  const dateStr = d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  const logDate = entry.date ? new Date(`${entry.date}T00:00:00`) : null;
+  const dateStr = (logDate && !isNaN(logDate.getTime()) ? logDate : d)
+    .toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
   let timeContent: string;
   if (startTime && endTime) {
     timeContent = `${dateStr} · ${startTime} → ${endTime}`;
   } else if (startTime) {
     timeContent = `${dateStr} · ${startTime}`;
+  } else if (endTime) {
+    timeContent = `${dateStr} · ${endTime}`;
   } else {
     timeContent = `${dateStr} · ${d.toLocaleTimeString()}`;
   }

@@ -10,6 +10,7 @@ export interface Metadata {
 export interface Timestamps {
   startTime: string | null;
   endTime: string | null;
+  date: string | null;
 }
 
 export function extractMetadata(originalTitle: string, deploymentType: DeploymentType | null): Metadata {
@@ -72,13 +73,31 @@ export function extractMetadata(originalTitle: string, deploymentType: Deploymen
 
 export function extractTimestamps(): Timestamps {
   const table = document.getElementById('MessagesTable');
-  if (!table) return { startTime: null, endTime: null };
+  if (!table) return extractLifeTimeTimestamps();
   const timeRe = /^\d{2}:\d{2}:\d{2}/;
   const cells = Array.from(table.querySelectorAll<HTMLElement>('td'))
     .filter(td => timeRe.test(td.textContent?.trim() ?? ''));
-  if (cells.length === 0) return { startTime: null, endTime: null };
+  if (cells.length === 0) return { startTime: null, endTime: null, date: null };
   return {
     startTime: cells[0].textContent!.trim().slice(0, 8),
     endTime:   cells[cells.length - 1].textContent!.trim().slice(0, 8),
+    date:      null,
+  };
+}
+
+// LifeTime's deployment log rows read "YYYY-MM-DD HH:MM:SS" (server-local time, no
+// timezone). The log is collapsed by default but still in the DOM, so textContent works.
+function extractLifeTimeTimestamps(): Timestamps {
+  const logRe = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/;
+  const stamps = Array.from(
+    document.querySelectorAll<HTMLElement>('[id$="wtStagingMessageDetailTable"] td'),
+  )
+    .map(td => td.textContent?.trim().match(logRe))
+    .filter((m): m is RegExpMatchArray => m !== null && m !== undefined);
+  if (stamps.length === 0) return { startTime: null, endTime: null, date: null };
+  return {
+    startTime: stamps[0][2],
+    endTime:   stamps[stamps.length - 1][2],
+    date:      stamps[0][1],
   };
 }

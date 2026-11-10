@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- LifeTime deployments showed the time the page was last opened as their start/end time. The date and times are now read from the deployment log.
 - A finished LifeTime deployment could show as "in progress" after reopening it (for example one that finished with warnings). The status is now read from the deployment's finish banner.
 
 ---

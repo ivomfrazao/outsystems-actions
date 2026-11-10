@@ -12,6 +12,7 @@ export interface DeploymentUpdateMessage {
     tabId: null;
     startTime: string | null;
     endTime: string | null;
+    date: string | null;
   };
 }
 

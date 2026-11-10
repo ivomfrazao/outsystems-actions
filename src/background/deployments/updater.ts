@@ -74,6 +74,7 @@ export function applyDeploymentUpdate(
       timestamp:   inheritedTimestamp ?? timestamp,
       startTime:   payload.startTime ?? inheritedStartTime ?? existing?.startTime ?? null,
       endTime:     null,
+      date:        payload.date ?? existing?.date ?? null,
       tabId,
     };
     if (currentIdx >= 0) {
@@ -106,6 +107,7 @@ export function applyDeploymentUpdate(
       timestamp,
       name:      payload.name ?? existing.name,
       endTime:   payload.endTime,
+      date:      payload.date ?? existing.date ?? null,
       tabId:     undefined,
     };
     current = current.slice();
@@ -137,6 +139,7 @@ export function applyDeploymentUpdate(
     timestamp,
     startTime:   payload.startTime ?? null,
     endTime:     payload.endTime,
+    date:        payload.date ?? null,
   };
   setDeployments([finalEntry, ...current]);
   return { kind: 'final', entry: finalEntry };

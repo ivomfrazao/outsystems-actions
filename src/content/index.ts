@@ -81,7 +81,7 @@ function sendUpdate(status: DeploymentStatus, keepalive: boolean): void {
 function checkForUpdates(): void {
   if (!deploymentType) return;
 
-  const detection = detectStatus();
+  const detection = detectStatus(deploymentType);
   pollsSinceLastSend++;
 
   // Log only when the detection outcome changes, not on every poll.

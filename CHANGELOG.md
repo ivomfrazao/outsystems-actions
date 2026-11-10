@@ -6,6 +6,10 @@
 
 - **Consistent status colors** — the tab prefix, popup labels and toolbar badge now use the same color for each status (in progress is blue, warning is yellow, intervention is purple).
 
+### Fixed
+
+- A finished LifeTime deployment could show as "in progress" after reopening it (for example one that finished with warnings). The status is now read from the deployment's finish banner.
+
 ---
 
 ## 1.2.1 — 2026-11-01

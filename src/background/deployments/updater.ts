@@ -1,7 +1,7 @@
 import type { DeploymentEntry } from '../../shared/types';
 import type { DeploymentUpdateMessage } from '../../shared/messages';
 import { DeploymentStatus } from '../../shared/types';
-import { getDeployments, setDeployments, sameDeploymentUrl } from './store';
+import { getDeployments, setDeployments, sameDeploymentUrl, markAsUnknown } from './store';
 
 export type UpdateOutcome =
   | { kind: 'noop'; reason: 'unchanged' | 'already-recorded' }
@@ -16,6 +16,18 @@ export function applyDeploymentUpdate(
   const payload   = message.payload;
   const timestamp = Date.now();
   let   current   = getDeployments();
+
+  // A tab that navigated from one deployment page to another still owns the
+  // previous page's InProgress entry. That deployment was left mid-run, so
+  // release it as Unknown (as closing the tab would) instead of treating this
+  // page's updates as belonging to it.
+  if (current.some(d => d.tabId === tabId && !sameDeploymentUrl(d.url, payload.url))) {
+    current = markAsUnknown(
+      current,
+      d => d.tabId === tabId && d.status === DeploymentStatus.InProgress && !sameDeploymentUrl(d.url, payload.url),
+    ).map(d => d.tabId === tabId && !sameDeploymentUrl(d.url, payload.url) ? { ...d, tabId: undefined } : d);
+    setDeployments(current);
+  }
 
   const currentIdx = current.findIndex(d => d.tabId === tabId);
   const existing   = currentIdx >= 0 ? current[currentIdx] : undefined;

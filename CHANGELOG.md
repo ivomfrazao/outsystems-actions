@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- A running LifeTime deployment opened in a tab that had shown another running deployment was not added to the in-progress list. When it finished, its result was written onto the other deployment's card. Each deployment page now gets its own card, and the deployment the tab left is marked as unknown, as if its tab had been closed.
+
+---
+
 ## 1.2.2 — 2026-11-10
 
 ### Changed

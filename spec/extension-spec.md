@@ -252,7 +252,18 @@ Each history card must include a dedicated **delete button** (×).
 
 ### 6.4 Stale Deployment Detection
 
-When the content script stops polling (tab closed or browser closed), the background cannot receive a final status. Two events trigger the `in_progress` → `unknown` transition; only one sends a notification.
+When the content script stops polling (tab closed, browser closed, or the tab navigated to another deployment page), the background cannot receive a final status. Three events trigger the `in_progress` → `unknown` transition; only one sends a notification.
+
+#### Tab-Navigation Check
+
+An entry's `tabId` is only cleared when the tab closes or the deployment reaches a final status. When the same tab later shows a different deployment page, its updates must not be applied to the previous page's entry. On every `deploymentUpdate`, before looking up the tab's entry, the background must:
+
+1. Find entries whose `tabId` matches the sender tab but whose URL differs from the payload URL (path + query string comparison).
+2. Transition each `in_progress` one to `unknown` in place, with the same race-condition guard as the Tab-Close Check.
+3. Clear `tabId` on all of them, so the tab's entry is always the page currently sending updates.
+4. Persist the change. **No notification is sent.**
+
+The update is then handled as the first message from that page (a new `in_progress` card, or a first-message-is-final entry).
 
 #### Tab-Close Check
 

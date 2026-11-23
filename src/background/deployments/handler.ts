@@ -26,6 +26,9 @@ export function handleDeploymentUpdate(
 
   switch (outcome.kind) {
     case 'noop':
+      // Not a keepalive: the updater may have released this tab's previous
+      // entry or dropped Unknown placeholders, so persist that.
+      if (outcome.reason === 'already-recorded') saveDeployments();
       break;
     case 'name-patch':
     case 'in-progress':

@@ -1,5 +1,5 @@
 import type { DeploymentEntry, FinalStatus, UserPreferences } from '../shared/types';
-import { DeploymentStatus, DeploymentType } from '../shared/types';
+import { DeploymentStatus, DeploymentType, LogEvent, LogSource } from '../shared/types';
 import { t, i18nReady } from '../shared/i18n';
 import { STATUS_COLORS } from '../shared/status-style';
 import { debugLog } from './debug-log';
@@ -53,7 +53,7 @@ export function clearBadge(): void {
 export async function createNotification(entry: DeploymentEntry, prefs: UserPreferences): Promise<void> {
   const status = entry.status as FinalStatus;
   if (!prefs.notificationsEnabled || !prefs[PREF_KEY_MAP[status]]) {
-    debugLog('background', 'notification-suppressed', {
+    debugLog(LogSource.Background, LogEvent.NotificationSuppressed, {
       status,
       reason: prefs.notificationsEnabled ? `${PREF_KEY_MAP[status]} is off` : 'all notifications off',
     });
@@ -73,5 +73,5 @@ export async function createNotification(entry: DeploymentEntry, prefs: UserPref
     requireInteraction: false,
   };
   chrome.notifications.create(`deployment-${entry.id}`, options);
-  debugLog('background', 'notification-shown', { title: options.title, message: options.message });
+  debugLog(LogSource.Background, LogEvent.NotificationShown, { title: options.title, message: options.message });
 }

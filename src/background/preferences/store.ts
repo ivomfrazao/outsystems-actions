@@ -1,4 +1,5 @@
 import type { UserPreferences } from '../../shared/types';
+import { HistoryLimitType } from '../../shared/types';
 import { STORAGE_KEYS } from '../../shared/constants';
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -9,7 +10,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   notifyIntervention:   true,
   notifyUnknown:        true,
   animationsEnabled:    true,
-  historyLimitType:     'count',
+  historyLimitType:     HistoryLimitType.Count,
   historyMaxCount:      20,
   historyMaxDays:       7,
 };

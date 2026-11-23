@@ -1,4 +1,6 @@
+import type { LogEvent } from '../shared/types';
 import { STORAGE_KEYS } from '../shared/constants';
+import { MessageType } from '../shared/messages';
 
 let enabled = false;
 
@@ -13,11 +15,11 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 });
 
-export function debugLog(event: string, data?: Record<string, unknown>): void {
+export function debugLog(event: LogEvent, data?: Record<string, unknown>): void {
   void ready.then(() => {
     if (!enabled) return;
     chrome.runtime.sendMessage(
-      { type: 'debugLog', payload: { event, data } },
+      { type: MessageType.DebugLog, payload: { event, data } },
       () => { void chrome.runtime.lastError; },
     );
   });

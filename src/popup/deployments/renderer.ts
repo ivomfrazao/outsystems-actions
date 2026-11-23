@@ -1,6 +1,7 @@
 import type { DeploymentEntry } from '../../shared/types';
 import { DeploymentStatus, DeploymentType } from '../../shared/types';
 import { t } from '../../shared/i18n';
+import { MessageType } from '../../shared/messages';
 
 type TagStyle = 'in-progress' | 'success' | 'warning' | 'error' | 'intervention' | 'unknown';
 
@@ -75,7 +76,7 @@ function buildCard(entry: DeploymentEntry, isHistory: boolean): HTMLElement {
     del.textContent = '×';
     del.addEventListener('click', (e) => {
       e.stopPropagation();
-      chrome.runtime.sendMessage({ type: 'deleteDeployment', payload: { id } });
+      chrome.runtime.sendMessage({ type: MessageType.DeleteDeployment, payload: { id } });
       if (animationsEnabled()) {
         card.classList.remove('card--entering');
         card.classList.add('card--leaving');
@@ -129,7 +130,7 @@ function buildCard(entry: DeploymentEntry, isHistory: boolean): HTMLElement {
   card.appendChild(body);
 
   card.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ type: 'openDeployment', payload: { url, tabId } });
+    chrome.runtime.sendMessage({ type: MessageType.OpenDeployment, payload: { url, tabId } });
   });
 
   return card;

@@ -63,7 +63,7 @@ The module exposes:
 ## Adding a New Language
 
 1. Create `src/locales/<code>.json` with all keys from `en.json` translated.
-2. Add the code to `SUPPORTED_LOCALES` in `src/shared/i18n.ts`.
+2. Add the code to the `Locale` object in `src/shared/i18n.ts` (`SUPPORTED_LOCALES` is derived from it).
 3. Add an `<option value="<code>">` to the `#languageSelect` element in `src/popup.html`. Option labels should use the language's native name (e.g. "Português", not "Portuguese") so users can recognise their language regardless of the current UI language.
 
 No other files need to change.
@@ -75,7 +75,7 @@ No other files need to change.
 **Positive:**
 
 - Language selection is fully under user control and takes effect immediately.
-- Adding a new language requires no TypeScript changes — only a JSON file, an array entry, and an HTML `<option>`.
+- Adding a new language requires only a JSON file, one `Locale` entry, and an HTML `<option>`.
 - The locale files are plain JSON, making them easy to hand off to translators or integrate with a translation management system.
 - `t(key)` degrades gracefully: missing keys display the key name rather than crashing or showing nothing.
 

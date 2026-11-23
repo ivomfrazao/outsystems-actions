@@ -1,7 +1,13 @@
-export type SupportedLocale = 'en' | 'pt';
+import { STORAGE_KEYS } from './constants';
 
-export const SUPPORTED_LOCALES: readonly SupportedLocale[] = ['en', 'pt'];
-export const DEFAULT_LOCALE: SupportedLocale = 'en';
+export const Locale = {
+  En: 'en',
+  Pt: 'pt',
+} as const;
+export type SupportedLocale = (typeof Locale)[keyof typeof Locale];
+
+export const SUPPORTED_LOCALES: readonly SupportedLocale[] = Object.values(Locale);
+export const DEFAULT_LOCALE: SupportedLocale = Locale.En;
 
 let messages: Record<string, string> = {};
 let loading: Promise<void> = Promise.resolve();
@@ -48,8 +54,8 @@ export function applyI18n(): void {
 
 export function loadLanguagePreference(): Promise<SupportedLocale> {
   return new Promise(resolve => {
-    chrome.storage.local.get('language', result => {
-      const lang = result['language'] as string;
+    chrome.storage.local.get(STORAGE_KEYS.language, result => {
+      const lang = result[STORAGE_KEYS.language] as string;
       resolve((SUPPORTED_LOCALES as readonly string[]).includes(lang)
         ? lang as SupportedLocale
         : DEFAULT_LOCALE);
@@ -58,5 +64,5 @@ export function loadLanguagePreference(): Promise<SupportedLocale> {
 }
 
 export function saveLanguagePreference(locale: SupportedLocale): void {
-  chrome.storage.local.set({ language: locale });
+  chrome.storage.local.set({ [STORAGE_KEYS.language]: locale });
 }

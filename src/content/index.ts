@@ -1,5 +1,6 @@
 import type { DeploymentStatus, DeploymentType } from '../shared/types';
-import { DeploymentStatus as Status } from '../shared/types';
+import { DeploymentStatus as Status, LogEvent } from '../shared/types';
+import { MessageType } from '../shared/messages';
 import { POLL_INTERVAL_MS } from '../shared/constants';
 import { STATUS_INDICATORS } from '../shared/status-style';
 import { detectPageType } from './page-detector';
@@ -55,7 +56,7 @@ function sendUpdate(status: DeploymentStatus, keepalive: boolean): void {
 
   chrome.runtime.sendMessage(
     {
-      type: 'deploymentUpdate',
+      type: MessageType.DeploymentUpdate,
       payload: {
         status,
         name,
@@ -73,7 +74,7 @@ function sendUpdate(status: DeploymentStatus, keepalive: boolean): void {
   );
   pollsSinceLastSend = 0;
   if (!keepalive) {
-    debugLog('update-sent', { status, name, environment, server, startTime, endTime });
+    debugLog(LogEvent.UpdateSent, { status, name, environment, server, startTime, endTime });
   }
 }
 
@@ -88,7 +89,7 @@ function checkForUpdates(): void {
   // Log only when the detection outcome changes, not on every poll.
   const detectionKey = detection ? `${detection.status}|${detection.reason}` : null;
   if (detectionKey !== lastDetection) {
-    debugLog('status-detected', detection
+    debugLog(LogEvent.StatusDetected, detection
       ? { status: detection.status, reason: detection.reason }
       : { status: null, reason: 'no status signal on page' });
     lastDetection = detectionKey;
@@ -110,7 +111,7 @@ function checkForUpdates(): void {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 extractMetadata(originalTitle, deploymentType);
-debugLog(deploymentType ? 'page-detected' : 'page-ignored', {
+debugLog(deploymentType ? LogEvent.PageDetected : LogEvent.PageIgnored, {
   deploymentType,
   url:   window.location.href,
   title: originalTitle,

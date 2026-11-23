@@ -1,5 +1,5 @@
 import type { DeploymentEntry, UserPreferences } from './types';
-import { DeploymentStatus } from './types';
+import { DeploymentStatus, HistoryLimitType } from './types';
 
 export type HistoryLimits = Pick<UserPreferences, 'historyLimitType' | 'historyMaxCount' | 'historyMaxDays'>;
 
@@ -11,7 +11,7 @@ export function applyHistoryLimits(all: DeploymentEntry[], limits: HistoryLimits
     .filter(d => d.status !== DeploymentStatus.InProgress)
     .sort((a, b) => b.timestamp - a.timestamp);
 
-  if (limits.historyLimitType === 'days') {
+  if (limits.historyLimitType === HistoryLimitType.Days) {
     const cutoff = Date.now() - limits.historyMaxDays * 86_400_000;
     concluded = concluded.filter(e => e.timestamp >= cutoff);
   } else {

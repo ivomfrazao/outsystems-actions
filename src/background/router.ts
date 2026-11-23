@@ -1,6 +1,7 @@
 import type { BackgroundInboundMessage, PopupResponseMessage } from '../shared/messages';
+import { MessageType } from '../shared/messages';
 import type { UserPreferences } from '../shared/types';
-import { DeploymentStatus } from '../shared/types';
+import { DeploymentStatus, LogSource } from '../shared/types';
 import { getDeployments, setDeployments, saveDeployments } from './deployments/store';
 import { handleDeploymentUpdate } from './deployments/handler';
 import { handleUpdatePreferences } from './preferences/handler';
@@ -50,32 +51,32 @@ function handleMessage(
   getPreferences: () => UserPreferences,
 ): void {
   switch (message.type) {
-    case 'deploymentUpdate':
+    case MessageType.DeploymentUpdate:
       handleDeploymentUpdate(message, sender, getPreferences);
       break;
-    case 'getDeployments':
-      sendResponse({ type: 'deploymentsResponse', payload: { deployments: getDeployments() } });
+    case MessageType.GetDeployments:
+      sendResponse({ type: MessageType.DeploymentsResponse, payload: { deployments: getDeployments() } });
       break;
-    case 'getPreferences':
-      sendResponse({ type: 'preferencesResponse', payload: getPreferences() });
+    case MessageType.GetPreferences:
+      sendResponse({ type: MessageType.PreferencesResponse, payload: getPreferences() });
       break;
-    case 'updatePreferences':
+    case MessageType.UpdatePreferences:
       handleUpdatePreferences(message);
-      sendResponse({ type: 'preferencesUpdated' });
+      sendResponse({ type: MessageType.PreferencesUpdated });
       break;
-    case 'clearBadge':
+    case MessageType.ClearBadge:
       clearBadge();
       break;
-    case 'openDeployment':
+    case MessageType.OpenDeployment:
       openDeploymentUrl(message.payload.url, message.payload.tabId);
       break;
-    case 'debugLog':
-      debugLog('content', message.payload.event, message.payload.data, sender.tab?.id);
+    case MessageType.DebugLog:
+      debugLog(LogSource.Content, message.payload.event, message.payload.data, sender.tab?.id);
       break;
-    case 'clearDebugLog':
+    case MessageType.ClearDebugLog:
       clearDebugLog();
       break;
-    case 'deleteDeployment': {
+    case MessageType.DeleteDeployment: {
       const { id } = message.payload;
       setDeployments(getDeployments().filter(e => e.id !== id));
       saveDeployments();
@@ -87,7 +88,7 @@ function handleMessage(
 // Messages that reply via sendResponse; their channel must stay open while
 // the handler waits for the stored state to load.
 const RESPONDING_MESSAGES = new Set<BackgroundInboundMessage['type']>([
-  'getDeployments', 'getPreferences', 'updatePreferences',
+  MessageType.GetDeployments, MessageType.GetPreferences, MessageType.UpdatePreferences,
 ]);
 
 export function registerMessageRouter(getPreferences: () => UserPreferences, stateReady: Promise<void>): void {

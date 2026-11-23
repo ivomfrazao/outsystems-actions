@@ -1,4 +1,5 @@
 import { POLL_INTERVAL_MS } from '../shared/constants';
+import { MessageType } from '../shared/messages';
 import { initNav, initSwipe } from './navigation';
 import { refresh } from './deployments/service';
 import { initTheme } from './settings/appearance';
@@ -15,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNav();
   initSwipe();
 
-  chrome.runtime.sendMessage({ type: 'clearBadge' });
+  chrome.runtime.sendMessage({ type: MessageType.ClearBadge });
   initSettings(lang);
 
   refresh();

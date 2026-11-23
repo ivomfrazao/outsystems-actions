@@ -1,4 +1,4 @@
-import type { DebugLogEntry } from '../shared/types';
+import type { DebugLogEntry, LogEvent, LogSource } from '../shared/types';
 import { STORAGE_KEYS, DEBUG_LOG_MAX_ENTRIES } from '../shared/constants';
 
 // The background is the only writer of the log, so appends from several tabs
@@ -8,8 +8,8 @@ import { STORAGE_KEYS, DEBUG_LOG_MAX_ENTRIES } from '../shared/constants';
 let queue: Promise<void> = Promise.resolve();
 
 export function debugLog(
-  source: DebugLogEntry['source'],
-  event: string,
+  source: LogSource,
+  event: LogEvent,
   data?: Record<string, unknown>,
   tabId?: number,
 ): void {

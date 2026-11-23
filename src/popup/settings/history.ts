@@ -1,4 +1,5 @@
 import type { DeploymentEntry, UserPreferences } from '../../shared/types';
+import { HistoryLimitType } from '../../shared/types';
 import type { HistoryLimits } from '../../shared/history-limits';
 import { applyHistoryLimits } from '../../shared/history-limits';
 import { STORAGE_KEYS } from '../../shared/constants';
@@ -12,17 +13,17 @@ export function getCommittedHistoryLimits(): HistoryLimits {
   return committed;
 }
 
-function applyLimitType(type: 'count' | 'days'): void {
+function applyLimitType(type: HistoryLimitType): void {
   const countInput = document.getElementById('historyMaxCount') as HTMLInputElement | null;
   const daysInput  = document.getElementById('historyMaxDays')  as HTMLInputElement | null;
-  if (countInput) countInput.disabled = type !== 'count';
-  if (daysInput)  daysInput.disabled  = type !== 'days';
+  if (countInput) countInput.disabled = type !== HistoryLimitType.Count;
+  if (daysInput)  daysInput.disabled  = type !== HistoryLimitType.Days;
 }
 
 function readForm(): HistoryLimits {
   const limitType = (
-    document.querySelector<HTMLInputElement>('input[name="historyLimitType"]:checked')?.value ?? 'count'
-  ) as 'count' | 'days';
+    document.querySelector<HTMLInputElement>('input[name="historyLimitType"]:checked')?.value ?? HistoryLimitType.Count
+  ) as HistoryLimitType;
   return {
     historyLimitType: limitType,
     historyMaxCount:  parseInt((document.getElementById('historyMaxCount') as HTMLInputElement)?.value ?? '', 10) || committed.historyMaxCount,

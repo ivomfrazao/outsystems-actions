@@ -17,10 +17,31 @@ export type DeploymentStatus = (typeof DeploymentStatus)[keyof typeof Deployment
 
 export type FinalStatus = Exclude<DeploymentStatus, typeof DeploymentStatus.InProgress>;
 
+export const LogSource = {
+  Content:    'content',
+  Background: 'background',
+} as const;
+export type LogSource = (typeof LogSource)[keyof typeof LogSource];
+
+export const LogEvent = {
+  // Content script
+  PageDetected:   'page-detected',
+  PageIgnored:    'page-ignored',
+  StatusDetected: 'status-detected',
+  UpdateSent:     'update-sent',
+  // Background
+  WorkerStarted:          'worker-started',
+  UpdateHandled:          'update-handled',
+  MarkedUnknown:          'marked-unknown',
+  NotificationSuppressed: 'notification-suppressed',
+  NotificationShown:      'notification-shown',
+} as const;
+export type LogEvent = (typeof LogEvent)[keyof typeof LogEvent];
+
 export interface DebugLogEntry {
   time: number;
-  source: 'content' | 'background';
-  event: string;
+  source: LogSource;
+  event: LogEvent;
   tabId?: number;
   data?: Record<string, unknown>;
 }
@@ -42,6 +63,20 @@ export interface DeploymentEntry {
   tabId?: number;
 }
 
+export const HistoryLimitType = {
+  Count: 'count',
+  Days:  'days',
+} as const;
+export type HistoryLimitType = (typeof HistoryLimitType)[keyof typeof HistoryLimitType];
+
+// Stored on its own under STORAGE_KEYS.darkMode, not in UserPreferences.
+export const DarkMode = {
+  On:     'on',
+  Off:    'off',
+  System: 'system',
+} as const;
+export type DarkMode = (typeof DarkMode)[keyof typeof DarkMode];
+
 export interface UserPreferences {
   notificationsEnabled: boolean;
   notifySuccess:        boolean;
@@ -50,7 +85,7 @@ export interface UserPreferences {
   notifyIntervention:   boolean;
   notifyUnknown:        boolean;
   animationsEnabled:    boolean;
-  historyLimitType:     'count' | 'days';
+  historyLimitType:     HistoryLimitType;
   historyMaxCount:      number;
   historyMaxDays:       number;
 }

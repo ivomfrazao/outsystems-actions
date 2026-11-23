@@ -1,6 +1,7 @@
 import type { DebugLogEntry } from '../../shared/types';
 import { REPO_URL, STORAGE_KEYS } from '../../shared/constants';
 import { t } from '../../shared/i18n';
+import { MessageType } from '../../shared/messages';
 
 // Issue bodies stay in English regardless of UI language so the maintainer can read them.
 function issueUrl(label: string, body: string): string {
@@ -12,13 +13,13 @@ function issueUrl(label: string, body: string): string {
 // settings and current deployment state.
 async function buildLogExport(): Promise<string> {
   const result = await chrome.storage.local.get([
-    STORAGE_KEYS.debugLog, STORAGE_KEYS.preferences, STORAGE_KEYS.deployments, 'language',
+    STORAGE_KEYS.debugLog, STORAGE_KEYS.preferences, STORAGE_KEYS.deployments, STORAGE_KEYS.language,
   ]);
   const entries = (result[STORAGE_KEYS.debugLog] as DebugLogEntry[] | undefined) ?? [];
   return JSON.stringify({
     extensionVersion: chrome.runtime.getManifest().version,
     userAgent:        navigator.userAgent,
-    language:         result['language'] ?? null,
+    language:         result[STORAGE_KEYS.language] ?? null,
     exportedAt:       new Date().toISOString(),
     preferences:      result[STORAGE_KEYS.preferences] ?? null,
     deployments:      result[STORAGE_KEYS.deployments] ?? [],
@@ -72,7 +73,7 @@ function initDiagnostics(): void {
   });
 
   clear?.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ type: 'clearDebugLog' });
+    chrome.runtime.sendMessage({ type: MessageType.ClearDebugLog });
   });
 }
 

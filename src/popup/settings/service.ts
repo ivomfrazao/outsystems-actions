@@ -1,6 +1,7 @@
 import type { UserPreferences } from '../../shared/types';
 import type { SupportedLocale } from '../../shared/i18n';
 import type { PopupResponseMessage } from '../../shared/messages';
+import { MessageType } from '../../shared/messages';
 import { initNotificationsTab } from './notifications';
 import { initHistoryTab, getCommittedHistoryLimits } from './history';
 import { initAppearanceTab } from './appearance';
@@ -37,7 +38,7 @@ function saveCurrentPreferences(): void {
     ...getCommittedHistoryLimits(),
   };
 
-  chrome.runtime.sendMessage({ type: 'updatePreferences', payload: prefs });
+  chrome.runtime.sendMessage({ type: MessageType.UpdatePreferences, payload: prefs });
 }
 
 export function initSettings(currentLang: SupportedLocale): void {
@@ -45,8 +46,8 @@ export function initSettings(currentLang: SupportedLocale): void {
   initSettingsTabNav();
   initAboutTab();
 
-  chrome.runtime.sendMessage({ type: 'getPreferences' }, (response: PopupResponseMessage) => {
-    if (response?.type !== 'preferencesResponse') return;
+  chrome.runtime.sendMessage({ type: MessageType.GetPreferences }, (response: PopupResponseMessage) => {
+    if (response?.type !== MessageType.PreferencesResponse) return;
     const prefs = response.payload;
     initNotificationsTab(prefs, saveCurrentPreferences);
     initHistoryTab(prefs, saveCurrentPreferences);

@@ -1,5 +1,5 @@
 import type { DeploymentEntry, UserPreferences } from '../shared/types';
-import { DeploymentStatus } from '../shared/types';
+import { DeploymentStatus, LogEvent, LogSource } from '../shared/types';
 import { STORAGE_KEYS } from '../shared/constants';
 import { getDeployments, setDeployments, markAsUnknown } from './deployments/store';
 import { enforceHistoryLimits } from './deployments/history';
@@ -22,7 +22,7 @@ export function registerLifecycleListeners(getPreferences: () => UserPreferences
         );
         setDeployments(updated);
         enforceHistoryLimits(getPreferences());
-        debugLog('background', 'marked-unknown', { trigger: 'tab closed' }, tabId);
+        debugLog(LogSource.Background, LogEvent.MarkedUnknown, { trigger: 'tab closed' }, tabId);
         // Unknown notifications only fire at browser startup, not on tab close.
       }
     ));
@@ -41,7 +41,7 @@ export function registerLifecycleListeners(getPreferences: () => UserPreferences
         const updated = markAsUnknown(stored, d => d.status === DeploymentStatus.InProgress);
         setDeployments(updated);
         enforceHistoryLimits(getPreferences());
-        debugLog('background', 'marked-unknown', {
+        debugLog(LogSource.Background, LogEvent.MarkedUnknown, {
           trigger: 'browser startup',
           count:   updated.filter(d => d.status === DeploymentStatus.Unknown).length,
         });

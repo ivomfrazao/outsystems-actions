@@ -3,11 +3,24 @@ import type { DeploymentUpdateMessage } from '../../shared/messages';
 import { DeploymentStatus } from '../../shared/types';
 import { getDeployments, setDeployments, sameDeploymentUrl, markAsUnknown } from './store';
 
+export const OutcomeKind = {
+  Noop:       'noop',
+  NamePatch:  'name-patch',
+  InProgress: 'in-progress',
+  Final:      'final',
+} as const;
+
+export const NoopReason = {
+  Unchanged:       'unchanged',
+  AlreadyRecorded: 'already-recorded',
+} as const;
+export type NoopReason = (typeof NoopReason)[keyof typeof NoopReason];
+
 export type UpdateOutcome =
-  | { kind: 'noop'; reason: 'unchanged' | 'already-recorded' }
-  | { kind: 'name-patch' }
-  | { kind: 'in-progress' }
-  | { kind: 'final'; entry: DeploymentEntry };
+  | { kind: typeof OutcomeKind.Noop; reason: NoopReason }
+  | { kind: typeof OutcomeKind.NamePatch }
+  | { kind: typeof OutcomeKind.InProgress }
+  | { kind: typeof OutcomeKind.Final; entry: DeploymentEntry };
 
 export function applyDeploymentUpdate(
   message: DeploymentUpdateMessage,
@@ -37,11 +50,11 @@ export function applyDeploymentUpdate(
     current = current.slice();
     current[currentIdx] = { ...existing, name: payload.name };
     setDeployments(current);
-    return { kind: 'name-patch' };
+    return { kind: OutcomeKind.NamePatch };
   }
 
   // No-op: same status, name already known.
-  if (existing && existing.status === payload.status) return { kind: 'noop', reason: 'unchanged' };
+  if (existing && existing.status === payload.status) return { kind: OutcomeKind.Noop, reason: NoopReason.Unchanged };
 
   // Skip: first InProgress for a URL that already has a conclusive history entry.
   // Unknown entries are not conclusive — the user may be reopening to resolve one.
@@ -51,7 +64,7 @@ export function applyDeploymentUpdate(
            d.status !== DeploymentStatus.InProgress &&
            d.status !== DeploymentStatus.Unknown
     );
-    if (hasConclusive) return { kind: 'noop', reason: 'already-recorded' };
+    if (hasConclusive) return { kind: OutcomeKind.Noop, reason: NoopReason.AlreadyRecorded };
   }
 
   // Remove stale entries for the same URL tracked in other tabs (e.g. user opened
@@ -96,7 +109,7 @@ export function applyDeploymentUpdate(
       current = [entry, ...current];
     }
     setDeployments(current);
-    return { kind: 'in-progress' };
+    return { kind: OutcomeKind.InProgress };
   }
 
   // ── Final status ──────────────────────────────────────────────────────────────
@@ -125,7 +138,7 @@ export function applyDeploymentUpdate(
     current = current.slice();
     current[currentIdx] = finalEntry;
     setDeployments(current);
-    return { kind: 'final', entry: finalEntry };
+    return { kind: OutcomeKind.Final, entry: finalEntry };
   }
 
   // firstMessageIsFinal: tab opened on a page already at a final state with no
@@ -137,7 +150,7 @@ export function applyDeploymentUpdate(
   );
   if (hasConclusive) {
     setDeployments(current);
-    return { kind: 'noop', reason: 'already-recorded' };
+    return { kind: OutcomeKind.Noop, reason: NoopReason.AlreadyRecorded };
   }
 
   const finalEntry: DeploymentEntry = {
@@ -154,5 +167,5 @@ export function applyDeploymentUpdate(
     date:        payload.date ?? null,
   };
   setDeployments([finalEntry, ...current]);
-  return { kind: 'final', entry: finalEntry };
+  return { kind: OutcomeKind.Final, entry: finalEntry };
 }

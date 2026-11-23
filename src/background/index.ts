@@ -1,25 +1,25 @@
 import type { DeploymentEntry, UserPreferences } from '../shared/types';
-import { DeploymentStatus } from '../shared/types';
-import { STORAGE_KEYS } from '../shared/constants';
+import { DeploymentStatus, LogEvent, LogSource } from '../shared/types';
+import { STORAGE_KEYS, LEGACY_STORAGE_KEYS } from '../shared/constants';
 import { getDeployments, setDeployments, saveDeployments } from './deployments/store';
 import { getPreferences, setPreferences, DEFAULT_PREFERENCES } from './preferences/store';
 import { registerMessageRouter } from './router';
 import { registerLifecycleListeners } from './lifecycle';
-import { initI18n, loadLanguagePreference, SUPPORTED_LOCALES } from '../shared/i18n';
+import { initI18n, loadLanguagePreference, SUPPORTED_LOCALES, DEFAULT_LOCALE } from '../shared/i18n';
 import type { SupportedLocale } from '../shared/i18n';
 import { debugLog } from './debug-log';
 
 // Logged on every worker wake-up; helps correlate state loss after restarts.
-debugLog('background', 'worker-started');
+debugLog(LogSource.Background, LogEvent.WorkerStarted);
 
 loadLanguagePreference().then(lang => initI18n(lang));
 
 chrome.storage.onChanged.addListener((changes) => {
-  if ('language' in changes) {
-    const lang = changes['language'].newValue as string;
+  if (STORAGE_KEYS.language in changes) {
+    const lang = changes[STORAGE_KEYS.language].newValue as string;
     const locale = (SUPPORTED_LOCALES as readonly string[]).includes(lang)
       ? lang as SupportedLocale
-      : 'en';
+      : DEFAULT_LOCALE;
     initI18n(locale);
   }
 });
@@ -29,7 +29,7 @@ chrome.storage.onChanged.addListener((changes) => {
 // Event handlers wait on this: after a worker restart the in-memory state is
 // empty until it resolves, and acting earlier would save that empty state.
 const stateReady = chrome.storage.local.get(
-  [STORAGE_KEYS.deployments, STORAGE_KEYS.preferences, 'history', 'pendingDeployments'],
+  [STORAGE_KEYS.deployments, STORAGE_KEYS.preferences, LEGACY_STORAGE_KEYS.history, LEGACY_STORAGE_KEYS.pendingDeployments],
 ).then(
   (result: Record<string, unknown>) => {
     if (result[STORAGE_KEYS.preferences]) {
@@ -52,7 +52,7 @@ const stateReady = chrome.storage.local.get(
       server: string | null; url: string; startTime: string | null;
     };
 
-    const oldHistory = (result['history'] as OldHistoryEntry[] | undefined) ?? [];
+    const oldHistory = (result[LEGACY_STORAGE_KEYS.history] as OldHistoryEntry[] | undefined) ?? [];
     const migrated: DeploymentEntry[] = oldHistory.map(h => ({
       id:          h.id,
       type:        h.type as DeploymentEntry['type'],
@@ -66,7 +66,7 @@ const stateReady = chrome.storage.local.get(
       endTime:     h.endTime,
     }));
 
-    const oldPending = result['pendingDeployments'] as Record<string, OldPendingEntry> | undefined;
+    const oldPending = result[LEGACY_STORAGE_KEYS.pendingDeployments] as Record<string, OldPendingEntry> | undefined;
     if (oldPending) {
       const ts = Date.now();
       for (const entry of Object.values(oldPending)) {
@@ -88,7 +88,7 @@ const stateReady = chrome.storage.local.get(
     if (oldHistory.length > 0 || oldPending) {
       setDeployments(migrated);
       saveDeployments();
-      chrome.storage.local.remove(['history', 'pendingDeployments', 'activeDeployments']);
+      chrome.storage.local.remove(Object.values(LEGACY_STORAGE_KEYS));
     }
   }
 );
